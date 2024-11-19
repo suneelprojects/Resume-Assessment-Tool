@@ -13,13 +13,13 @@ dist/
 dist-ssr/
 *.local
 
-# Backend
+# Backend (if applicable)
 backend/uploads/
 backend/__pycache__/
 backend/*.pyc
 venv/
 
-# Build
+# Build (if applicable)
 build/
 out/
 

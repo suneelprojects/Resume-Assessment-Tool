@@ -96,7 +96,7 @@ def predict():
             "confidence": input_role_confidence,
             "suggested_roles": [
                 {"role": role, "confidence": confidence}
-                for role, confidence in zip(suggested_roles[:8], suggested_confidences[:8])
+                for role, confidence in zip(suggested_roles[:10], suggested_confidences[:10])
             ]
         })
 
