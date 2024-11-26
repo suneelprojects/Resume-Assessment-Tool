@@ -8,12 +8,12 @@ export const FadeUp = (delay) => ({
   initial: { opacity: 0, y: 50 },
   animate: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, duration: 0.5, delay, ease: "easeInOut" } },
 });
-
 const Hero = () => {
   const [fileName, setFileName] = useState("");
   const [buttonText, setButtonText] = useState("Upload Your Resume");
   const navigate = useNavigate();
 
+  // Function to handle file selection
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -32,8 +32,10 @@ const Hero = () => {
     }
   };
 
+  // Handle button click
   const handleButtonClick = () => {
     if (buttonText === "Continue") {
+      // Send the file to the backend for processing and then navigate to the JobDescription page
       uploadResumeAndNavigate();
     } else {
       document.getElementById("resumeUpload").click();
@@ -43,33 +45,36 @@ const Hero = () => {
   const uploadResumeAndNavigate = async () => {
     const file = document.getElementById("resumeUpload").files[0];
     if (!file) return;
-
+  
     const formData = new FormData();
     formData.append("resume", file);
-    const backendURL = `${window.location.protocol}//${window.location.hostname}:80`;
-
+  
     try {
-
-      const response = await fetch(`${backendURL}/api/extract_resume`, {
+      // Dynamically determine the backend URL based on the current frontend location
+      const backendURL = `${window.location.protocol}//${window.location.hostname}:${window.location.port}/api/extract_resume`;
+  
+      // Make an API call to upload the resume and extract text
+      const response = await fetch(backendURL, {
         method: "POST",
         body: formData,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Unknown error occurred.");
-      }
-
       const data = await response.json();
-      const { extractedText, parsedData } = data;
-
-      navigate("/role", { state: { resumeText: extractedText, parsedData } });
+  
+      if (response.ok) {
+        // Extracted resume text and parsed data returned by backend
+        const resumeText = data.extractedText;
+        const parsedData = data.parsedData;
+  
+        // Pass the extracted resume text and parsed data as state to the JobDescription page
+        navigate("/role", { state: { resumeText, parsedData } });
+      } else {
+        alert(data.error || "Error uploading resume.");
+      }
     } catch (error) {
-      console.error("Upload error:", error.message);
-      alert(`Error uploading resume: ${error.message}`);
+      alert("Error uploading resume.");
     }
   };
-
+  
   return (
     <section className="bg-gradient-to-r from-purple-600 to-blue-500 overflow-hidden relative flex flex-col justify-center pt-20 min-h-[calc(100vh-80px)]">
       <div className="container grid grid-cols-1 md:grid-cols-2 items-center">
@@ -89,7 +94,13 @@ const Hero = () => {
               className="border-dashed border-white border-2 rounded-lg p-4 md:p-6 w-full max-w-md text-center space-y-3 cursor-pointer"
             >
               <p className="text-gray-200 font-roboto text-[14px] md:text-[12.5px] lg:text-[18px]">
-                {fileName || "Drop your resume here or choose a file. PDF & DOCX only. Max 2MB file size."}
+                {fileName ? `${fileName}` : (
+                  <>
+                    Drop your resume here or choose a file.
+                    <br />
+                    PDF & DOCX only. Max 2MB file size.
+                  </>
+                )}
               </p>
               <button
                 type="button"
