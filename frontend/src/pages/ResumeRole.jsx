@@ -88,7 +88,7 @@ const ResumeRole = () => {
         }
 
         setLoading(true);
-        const backendURL = `${window.location.protocol}//${window.location.hostname}:80`;
+        const backendURL = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
 
         try {
             const response = await fetch(`${backendURL}/api/predict`, {
