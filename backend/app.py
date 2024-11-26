@@ -1,12 +1,17 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
+import socket
 from resume_parser import ResumeParser
 from resume_model import ResumeModel
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:5173"])
+CORS(app, origins=os.environ.get('ALLOWED_ORIGIN', '*'))  # CORS for all origins
 
 # Initialize resume model
 resume_model = ResumeModel()
@@ -32,9 +37,6 @@ def extract_resume():
             extracted_text = resume_model.extract_text_from_docx(file_path)
         else:
             return jsonify({"error": "Unsupported file type"}), 400
-        
-        # Print the extracted text to the console for debugging
-        print(f"Extracted Text from Resume:\n{extracted_text}\n")
         
         # Parse resume using ResumeParser
         resume_parser = ResumeParser(file_path)
@@ -78,7 +80,7 @@ def analyze():
     except Exception as e:
         return jsonify({"error": f"Error: {str(e)}"}), 500
 
-@app.route('/predict', methods=['POST'])
+@app.route('/api/predict', methods=['POST'])
 def predict():
     try:
         data = request.get_json()
@@ -105,4 +107,6 @@ def predict():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Dynamically determine IP address
+    ip_address = socket.gethostbyname(socket.gethostname())
+    app.run(host='0.0.0.0', port=80, debug=True)  # Listen on all interfaces (0.0.0.0)
