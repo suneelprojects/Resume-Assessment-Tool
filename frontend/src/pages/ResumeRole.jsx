@@ -38,7 +38,6 @@ const ResumeRole = () => {
             "Machine Learning Engineer",
             "Junior Python Data Scientist",
             "Data Engineer",
-            "Data Science",         // Additional role
         ],
         "Artificial Intelligence": [
             "Junior AI Engineer",
@@ -50,8 +49,8 @@ const ResumeRole = () => {
             "DevOps",
             "Cloud Engineer",
             "Cloud Developer",
-            "Network Engineer",     // Added role
-            "Cyber Security",       // Added role
+            "Network Engineer",
+            "Cyber Security",
         ],
         "Full Stack": [
             "Java Full Stack Developer",
@@ -64,13 +63,12 @@ const ResumeRole = () => {
             "Java Developer",
             "Python Developer",
             "JavaScript Developer",
-            "Mobile App Developer", // Added role
-            "Software Engineer",    // Added role
-            "Quality Assurance",    // Added role
-            "Business Analyst",     // Added role
+            "Mobile App Developer",
+            "Software Engineer",
+            "Quality Assurance",
+            "Business Analyst",
         ],
     };
-    
 
     const handleDomainChange = (e) => {
         setDomain(e.target.value);
@@ -90,9 +88,10 @@ const ResumeRole = () => {
         }
 
         setLoading(true);
+        const backendURL = `${window.location.protocol}//${window.location.hostname}:80`;
 
         try {
-            const response = await fetch("http://127.0.0.1:5000/predict", {
+            const response = await fetch(`${backendURL}/api/predict`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -119,26 +118,28 @@ const ResumeRole = () => {
         }
     };
 
-    // Filter the suggested roles based on the selected domain
     const filteredSuggestedRoles = predictionResult
         ? predictionResult.suggested_roles.filter(suggestedRole =>
             rolesByDomain[domain]?.includes(suggestedRole.role)
         )
         : [];
 
+    // Format the phone number correctly (with "+" and proper spacing)
+    const formatPhoneNumber = (phone) => {
+        if (!phone) return phone;
+        return phone.replace(/(\d{2})(\d{5})(\d{5})/, "+$1 $2 $3");
+    };
+
     return (
         <div className="min-h-screen flex flex-col justify-center items-center pt-16 relative overflow-hidden bg-gradient-to-r from-teal-400 to-indigo-500">
-         <div className="container max-w-7xl mx-auto p-8 flex flex-col md:flex-row gap-12 items-start justify-center relative mt-8 space-y-12 md:space-y-0">
+            <div className="container max-w-7xl mx-auto p-8 flex flex-col md:flex-row gap-12 items-start justify-center relative mt-8 space-y-12 md:space-y-0">
                 {/* Left Card for Domain and Role Selection */}
-            
-
-                {/* Right Card for Parsed Data */}
                 <motion.div
                     initial={{ opacity: 0, x: 100 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.8 }}
                     className="bg-white rounded-2xl shadow-xl p-8 w-full md:w-[50%] h-[550px] flex flex-col space-y-4 overflow-hidden overflow-y-auto custom-scrollbar"
-                    >
+                >
                     <div className="space-y-2">
                         {parsedData ? (
                             <>
@@ -159,7 +160,7 @@ const ResumeRole = () => {
                                 {/* Phone */}
                                 {parsedData.mobile_number && (
                                     <div className="border p-4 rounded-xl shadow-md">
-                                        <strong>Phone:</strong> {parsedData.mobile_number || "N/A"}
+                                        <strong>Phone:</strong> {formatPhoneNumber(parsedData.mobile_number) || "N/A"}
                                     </div>
                                 )}
 
@@ -190,10 +191,19 @@ const ResumeRole = () => {
 
                                 {/* Projects */}
                                 {parsedData.projects && parsedData.projects !== null && (
-                                    <div className="border p-4 rounded-xl shadow-md">
-                                        <strong>Projects:</strong> {parsedData.projects || "N/A"}
-                                    </div>
-                                )}
+    <div className="border p-4 rounded-xl shadow-md">
+        <strong>Projects:</strong>
+        <ul className="list-disc pl-6 mt-2">
+            {parsedData.projects
+                .split(/[\n•]+/) // Split by bullet points (•), dashes (-), or newlines (\n)
+                .map((project, index) => project.trim() && (  // Filter out empty strings after trimming
+                    <li key={index} className="text-gray-800">{project.trim()}</li>
+                ))
+            }
+        </ul>
+    </div>
+)}
+
 
                                 {/* Soft Skills */}
                                 {parsedData.soft_skills && parsedData.soft_skills.length > 0 ? (
@@ -211,6 +221,7 @@ const ResumeRole = () => {
                         )}
                     </div>
                 </motion.div>
+                {/* Right Card for Domain and Role Selection */}
                 <motion.div
                     initial={{ opacity: 0, x: 100 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -248,19 +259,13 @@ const ResumeRole = () => {
                 </motion.div>
             </div>
 
-
             <button
                 onClick={handleSubmit}
-                className="mt-8 px-10 py-4 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-all duration-300 shadow-lg"
+                disabled={loading}
+                className={`mt-8 bg-indigo-500 text-white py-3 px-6 rounded-2xl ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-                Check Your Score
+                {loading ? <CircleLoader color="#ffffff" loading={loading} size={24} /> : "Generate Prediction"}
             </button>
-
-            {loading && (
-                <div className="mt-8 flex justify-center">
-                    <CircleLoader color="#f97316" size={150} />
-                </div>
-            )}
 
             {predictionResult && !loading && (
                 <div
