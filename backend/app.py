@@ -6,7 +6,7 @@ from resume_model import ResumeModel
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:5173"])
+CORS(app, origins=["*"])
 
 # Initialize resume model
 resume_model = ResumeModel()
@@ -103,6 +103,5 @@ def predict():
     except Exception as e:
         return jsonify({"error": f"Error: {str(e)}"}), 400
 
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False, host="0.0.0.0", port=5000)  # Disable debug mode for production

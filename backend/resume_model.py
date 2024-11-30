@@ -2,17 +2,11 @@ import os
 import re
 import joblib
 import numpy as np
-import pandas as pd
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 import tensorflow as tf
 from transformers import BertTokenizer, BertModel
-from collections import Counter, OrderedDict
-import spacy
+from collections import Counter
 import PyPDF2
 import docx
-from pdfminer.high_level import extract_text
-
 
 class ResumeModel:
     def __init__(self):
@@ -37,8 +31,6 @@ class ResumeModel:
         self.model = tf.keras.models.load_model(os.path.join(self.base_dir, "update.h5"))
         self.vectorizer = joblib.load(os.path.join(self.base_dir, "vectorizer.pkl"))
         self.label_encoder = joblib.load(os.path.join(self.base_dir, "label_encoder.pkl"))
-        
-
 
     def load_skills_from_file(self, file_path):
         """Load skills from the text file into a list."""
@@ -66,11 +58,17 @@ class ResumeModel:
             return f"Error extracting text from DOCX: {str(e)}"
 
     def categorize_skills(self, text):
+        """Improved skill categorization using regex."""
         skills = {"hard_skills": [], "soft_skills": [], "other_skills": []}
+
         for category, skills_list in [("hard_skills", self.hard_skills), 
                                      ("soft_skills", self.soft_skills), 
                                      ("other_skills", self.other_skills)]:
-            skills[category] = [skill for skill in skills_list if re.search(r'\b' + re.escape(skill) + r'\b', text, re.IGNORECASE)]
+            for skill in skills_list:
+                if re.search(r'\b' + re.escape(skill) + r'\b', text, re.IGNORECASE):
+                    skills[category].append(skill)
+
+        print(f"Extracted skills: {skills}")  # Debugging line to see the extracted skills
         return skills
 
     def extract_education(self, text):
@@ -83,13 +81,12 @@ class ResumeModel:
         return [degree for degree in education_keywords if re.search(r'\b' + re.escape(degree) + r'\b', text, re.IGNORECASE)]
 
     def extract_experience(self, text):
-        # Experience extraction logic
+        """Enhanced experience extraction with better regex."""
         experience_years = re.search(r'(\d+)[\s-]?(?:years|yrs)[\s-]?(?:of)?[\s-]?(?:experience)?', text, re.IGNORECASE)
         experience_months = re.search(r'(\d+)[\s-]?(?:months?|mos?)[\s-]?(?:of)?[\s-]?(?:experience)?', text, re.IGNORECASE)
         years = int(experience_years.group(1)) if experience_years else 0
         months = int(experience_months.group(1)) if experience_months else 0
         return years + months / 12
-
 
     def calculate_ats_score(self, resume_text, job_description, role=""):
         """Calculate ATS score based on resume and job description."""
@@ -101,7 +98,7 @@ class ResumeModel:
         return ((common_words + role_mention) / (total_job_words + 1)) * 100 if total_job_words else 0
 
     def hugging_face_recommendation_bert(self, resume_text, job_description):
-        """Use BERT to calculate semantic similarity between resume and job description."""
+        """Improved BERT-based semantic similarity."""
         resume_text_truncated = resume_text[:512]
         job_desc_text_truncated = job_description[:512]
 

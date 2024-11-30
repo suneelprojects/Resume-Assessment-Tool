@@ -41,7 +41,6 @@ const Hero = () => {
       document.getElementById("resumeUpload").click();
     }
   };
-
   const uploadResumeAndNavigate = async () => {
     const file = document.getElementById("resumeUpload").files[0];
     if (!file) return;
@@ -50,20 +49,15 @@ const Hero = () => {
     formData.append("resume", file);
   
     try {
-      // Make an API call to upload the resume and extract text
-      const response = await fetch("http://localhost:5000/api/extract_resume", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/extract_resume`, {
         method: "POST",
         body: formData,
       });
       const data = await response.json();
   
       if (response.ok) {
-        // Extracted resume text and parsed data returned by backend
         const resumeText = data.extractedText;
-        const parsedData = data.parsedData;
-        
-        // Pass the extracted resume text and parsed data as state to the JobDescription page
-        navigate("/role", { state: { resumeText, parsedData } });
+        // Handle success (e.g., show results or navigate to another page)
       } else {
         alert("Error uploading resume.");
       }
@@ -71,6 +65,7 @@ const Hero = () => {
       alert("Error uploading resume.");
     }
   };
+  
 
   return (
     <section className="bg-gradient-to-r from-purple-600 to-blue-500 overflow-hidden relative flex flex-col justify-center pt-20 min-h-[calc(100vh-80px)]">

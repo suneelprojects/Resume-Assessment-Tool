@@ -9,25 +9,29 @@ import Footer from "./components/Footer";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import MainLayout from "./pages/MainLayout";
+
+// Get the API URL from the environment variables
+const apiUrl = import.meta.env.VITE_API_URL;
+
 const App = () => {
   return (
     <main className="overflow-x-hidden">
-            <ToastContainer />
+      <ToastContainer />
 
       <Navbar />
       <Routes>
-      <Route path="/" element={<MainLayout/>} />
-      <Route path="/job-description" element={<JobDescription />} />
-        <Route path="/role" element={<ResumeRole />} />
-        <Route path="/results" element={<Results />} />
+        <Route path="/" element={<MainLayout apiUrl={apiUrl}/>} />
+        <Route path="/job-description" element={<JobDescription apiUrl={apiUrl} />} />
+        <Route path="/role" element={<ResumeRole apiUrl={apiUrl} />} />
+        <Route path="/results" element={<Results apiUrl={apiUrl} />} />
       </Routes>
       <Footer />
-
     </main>
   );
 };
 
 export default App;
+
 // import React, { useState } from 'react';
 
 // function App() {
