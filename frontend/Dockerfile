@@ -22,6 +22,9 @@ FROM nginx:alpine
 # Copy the React build output (dist folder) from the build stage to Nginx
 COPY --from=build /app/dist /usr/share/nginx/html
 
+# Copy custom nginx config file to container
+COPY nginx.conf /etc/nginx/nginx.conf
+
 # Expose port for Nginx
 EXPOSE 80
 
