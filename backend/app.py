@@ -6,7 +6,7 @@ from resume_model import ResumeModel
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app, origins=["*"])
+CORS(app, origins=["http://devopsdost.xyz"])
 
 # Initialize resume model
 resume_model = ResumeModel()
