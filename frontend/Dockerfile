@@ -1,29 +1,29 @@
-# Stage 1: Build React app
-FROM node:16 AS build
+# Base image
+FROM node:16 AS frontend-build
 
 # Set working directory
 WORKDIR /app
 
 # Copy package.json and package-lock.json
-COPY package*.json ./
+COPY frontend/package.json frontend/package-lock.json ./
 
-# Install dependencies
-RUN npm install
+# Clear cache and install dependencies
+RUN rm -rf node_modules package-lock.json && npm cache clean --force && npm install
 
-# Copy the rest of the app files
-COPY . .
+# Copy the rest of the code
+COPY frontend/ .
 
-# Build the React app
+# Build the application
 RUN npm run build
 
-# Stage 2: Setup Nginx
+# Production image
 FROM nginx:alpine
 
-# Copy the React build output (dist folder) from the build stage to Nginx
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copy built files to Nginx directory
+COPY --from=frontend-build /app/dist /usr/share/nginx/html
 
-# Expose port for Nginx
+# Expose port 80
 EXPOSE 80
 
-# Run Nginx
+# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
