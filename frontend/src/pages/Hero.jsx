@@ -12,6 +12,9 @@ const Hero = () => {
   const [fileName, setFileName] = useState("");
   const [buttonText, setButtonText] = useState("Upload Your Resume");
   const navigate = useNavigate();
+  const apiUrl = typeof process !== "undefined" && process.env.REACT_APP_API_URL
+  ? process.env.REACT_APP_API_URL
+  : "http://devopsdost.xyz/api";  // Fallback to default URL if the env variable is not set
 
   // Function to handle file selection
   const handleFileUpload = (e) => {
@@ -49,15 +52,21 @@ const Hero = () => {
     formData.append("resume", file);
   
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/extract_resume`, {
-        method: "POST",
+      // Make an API call to upload the resume and extract text
+
+        const response = await fetch(`${apiUrl}/extract_resume`, {
+          method: "POST",
         body: formData,
       });
       const data = await response.json();
   
       if (response.ok) {
+        // Extracted resume text and parsed data returned by backend
         const resumeText = data.extractedText;
-        // Handle success (e.g., show results or navigate to another page)
+        const parsedData = data.parsedData;
+        
+        // Pass the extracted resume text and parsed data as state to the JobDescription page
+        navigate("/role", { state: { resumeText, parsedData } });
       } else {
         alert("Error uploading resume.");
       }
@@ -65,8 +74,6 @@ const Hero = () => {
       alert("Error uploading resume.");
     }
   };
-  
-
   return (
     <section className="bg-gradient-to-r from-purple-600 to-blue-500 overflow-hidden relative flex flex-col justify-center pt-20 min-h-[calc(100vh-80px)]">
       <div className="container grid grid-cols-1 md:grid-cols-2 items-center">
