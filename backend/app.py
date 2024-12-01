@@ -6,13 +6,20 @@ from resume_model import ResumeModel
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app, origins=["http://devopsdost.xyz"])
+
+# Enable CORS for all origins
+CORS(app)
+
+# Get the environment (production or local) from environment variables
+FLASK_ENV = os.getenv('FLASK_ENV', 'production')  # Default to production if not set
+ALLOWED_EXTENSIONS = set(['pdf', 'docx'])
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'uploads')
 
 # Initialize resume model
 resume_model = ResumeModel()
 
 # Ensure 'uploads' folder exists
-os.makedirs("uploads", exist_ok=True)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route("/api/extract_resume", methods=["POST"])
 def extract_resume():
@@ -22,9 +29,9 @@ def extract_resume():
 
     try:
         # Save the uploaded file
-        file_path = os.path.join("uploads", file.filename)
+        file_path = os.path.join(UPLOAD_FOLDER, file.filename)
         file.save(file_path)
-        
+
         # Extract raw text from the resume based on the file type (PDF or DOCX)
         if file.filename.endswith(".pdf"):
             extracted_text = resume_model.extract_text_from_pdf(file_path)
@@ -32,10 +39,10 @@ def extract_resume():
             extracted_text = resume_model.extract_text_from_docx(file_path)
         else:
             return jsonify({"error": "Unsupported file type"}), 400
-        
+
         # Print the extracted text to the console for debugging
         print(f"Extracted Text from Resume:\n{extracted_text}\n")
-        
+
         # Parse resume using ResumeParser
         resume_parser = ResumeParser(file_path)
         parsed_data = resume_parser.get_extracted_data()
@@ -48,6 +55,7 @@ def extract_resume():
 
     except Exception as e:
         return jsonify({"error": f"Error: {str(e)}"}), 500
+
 
 @app.route('/api/analyze', methods=['POST'])
 def analyze():
@@ -78,6 +86,7 @@ def analyze():
     except Exception as e:
         return jsonify({"error": f"Error: {str(e)}"}), 500
 
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -103,5 +112,12 @@ def predict():
     except Exception as e:
         return jsonify({"error": f"Error: {str(e)}"}), 400
 
+
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=5000)  # Disable debug mode for production
+    # Run the app on the appropriate host and port based on the environment
+    if FLASK_ENV == 'production':
+        # For production, bind to the host and port for deployment (e.g., devopsdost.xyz)
+        app.run(debug=False, host='0.0.0.0', port=80)  # Production server, port 80
+    else:
+        # For local development, use localhost and port 5000
+        app.run(debug=True, host='0.0.0.0', port=5000)  # Local development

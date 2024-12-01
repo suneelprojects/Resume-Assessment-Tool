@@ -1,20 +1,19 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { IoIosLock } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import HeroPng from "../assets/rb_42.png";
 
+// FadeUp animation for framer-motion
 export const FadeUp = (delay) => ({
   initial: { opacity: 0, y: 50 },
   animate: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, duration: 0.5, delay, ease: "easeInOut" } },
 });
+
 const Hero = () => {
   const [fileName, setFileName] = useState("");
   const [buttonText, setButtonText] = useState("Upload Your Resume");
   const navigate = useNavigate();
-  const apiUrl = typeof process !== "undefined" && process.env.REACT_APP_API_URL
-  ? process.env.REACT_APP_API_URL
-  : "http://devopsdost.xyz/api";  // Fallback to default URL if the env variable is not set
 
   // Function to handle file selection
   const handleFileUpload = (e) => {
@@ -44,18 +43,21 @@ const Hero = () => {
       document.getElementById("resumeUpload").click();
     }
   };
+  const backendUrl = import.meta.env.MODE === 'production' 
+  ? import.meta.env.VITE_BACKEND_URL 
+  : 'http://127.0.0.1:80';
+
   const uploadResumeAndNavigate = async () => {
     const file = document.getElementById("resumeUpload").files[0];
     if (!file) return;
   
     const formData = new FormData();
     formData.append("resume", file);
-  
+   
     try {
       // Make an API call to upload the resume and extract text
-
-        const response = await fetch(`${apiUrl}/extract_resume`, {
-          method: "POST",
+      const response = await fetch(`${backendUrl}/api/extract_resume`, {
+        method: "POST",
         body: formData,
       });
       const data = await response.json();
@@ -64,7 +66,7 @@ const Hero = () => {
         // Extracted resume text and parsed data returned by backend
         const resumeText = data.extractedText;
         const parsedData = data.parsedData;
-        
+  
         // Pass the extracted resume text and parsed data as state to the JobDescription page
         navigate("/role", { state: { resumeText, parsedData } });
       } else {
@@ -74,6 +76,7 @@ const Hero = () => {
       alert("Error uploading resume.");
     }
   };
+  
   return (
     <section className="bg-gradient-to-r from-purple-600 to-blue-500 overflow-hidden relative flex flex-col justify-center pt-20 min-h-[calc(100vh-80px)]">
       <div className="container grid grid-cols-1 md:grid-cols-2 items-center">
@@ -85,7 +88,7 @@ const Hero = () => {
             Is your resume good <span className="block">enough?</span>
           </motion.h1>
           <motion.p variants={FadeUp(0.8)} initial="initial" animate="animate" className="text-gray-200 max-w-[550px] font-roboto text-[18px]">
-            Find out instantly. Upload your resume and our free resume scanner will evaluate it against key criteria hiring managers and applicant tracking systems (ATS) look for. Get actionable feedback on how to improve your resume's success rates.
+            Find out instantly. Upload your resume and our free resume scanner will evaluate it against key criteria hiring managers and applicant tracking systems (ATS) look for. Get actionable feedback on how to improve your resume's success rate.
           </motion.p>
           <motion.div variants={FadeUp(1)} initial="initial" animate="animate" className="flex justify-center md:justify-start">
             <label

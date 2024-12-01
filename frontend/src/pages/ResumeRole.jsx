@@ -88,10 +88,12 @@ const ResumeRole = () => {
         }
 
         setLoading(true);
-        const backendURL = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
-
+        const backendUrl = import.meta.env.MODE === 'production' 
+        ? import.meta.env.VITE_BACKEND_URL 
+        : 'http://127.0.0.1:80';
+      
         try {
-            const response = await fetch(`${backendURL}/api/predict`, {
+            const response = await fetch(`${backendUrl}/predict`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
