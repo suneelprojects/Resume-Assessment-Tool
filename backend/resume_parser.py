@@ -91,12 +91,13 @@ class ResumeParser:
 
     def extract_education(self, text):
         """Extract education details from resume text."""
-        education_keywords = ['b. tech', 'bachelor', 'master', 'phd', 'm.sc', 'diploma', 'degree', 'cgpa', 'b.s.']
+        education_keywords = ['b. tech', 'bachelor', 'master', 'phd', 'm.sc', 'diploma', 'degree', 'cgpa', 'b.s.', 'mba', 'msc', 'school', 'university']
         return self.extract_section('education', text, education_keywords)
 
     def extract_experience(self, text):
         """Extract work experience details from resume text."""
-        return self.extract_section('experience', text)
+        experience_keywords = ['experience', 'employment', 'work history', 'professional experience', 'previous roles', 'internship', 'job', 'position']
+        return self.extract_section('experience', text, experience_keywords)
 
     def extract_projects(self, text):
         """Extract projects from resume text."""
@@ -104,16 +105,17 @@ class ResumeParser:
 
     def extract_certifications(self, text):
         """Extract certifications from resume text."""
-        return self.extract_section('certifications', text)
+        certifications_keywords = ['certification', 'certified', 'credential', 'license']
+        return self.extract_section('certifications', text, certifications_keywords)
 
     def extract_languages(self, text):
         """Extract languages from resume text."""
-        languages = ['english', 'spanish', 'french', 'german', 'mandarin', 'italian', 'portuguese', 'japanese', 'korean']
+        languages = ['english', 'spanish', 'french', 'german', 'mandarin', 'italian', 'portuguese', 'japanese', 'korean', 'chinese', 'arabic']
         return [lang for lang in languages if lang in text]
 
     def extract_location(self, text):
         """Extract candidate's location (city, country)."""
-        location_keywords = ['location', 'address', 'city', 'country']
+        location_keywords = ['location', 'address', 'city', 'country', 'residence', 'city', 'region']
         return self.extract_section('location', text, location_keywords)
 
     def extract_social_links(self, text):
@@ -121,7 +123,8 @@ class ResumeParser:
         social_media_patterns = [
             r'https?://(www\.)?linkedin\.com/in/[a-zA-Z0-9-]+',
             r'https?://(www\.)?github\.com/[a-zA-Z0-9-]+',
-            r'https?://(www\.)?twitter\.com/[a-zA-Z0-9_]+'
+            r'https?://(www\.)?twitter\.com/[a-zA-Z0-9_]+',
+            r'https?://(www\.)?facebook\.com/[a-zA-Z0-9_]+'
         ]
         links = []
         for pattern in social_media_patterns:
@@ -130,7 +133,11 @@ class ResumeParser:
 
     def extract_soft_skills(self, text):
         """Extract soft skills from resume text."""
-        soft_skills_keywords = ['leadership', 'teamwork', 'problem solving', 'critical thinking', 'communication', 'adaptability', 'time management', 'project management']
+        soft_skills_keywords = [
+            'leadership', 'teamwork', 'problem solving', 'critical thinking', 'communication', 'adaptability',
+            'time management', 'project management', 'collaboration', 'conflict resolution', 'negotiation',
+            'creativity', 'decision making', 'empathy', 'organization', 'attention to detail', 'emotional intelligence'
+        ]
         return list(set([keyword for keyword in soft_skills_keywords if keyword in text]))
 
     def _extract_basic_details(self):

@@ -45,7 +45,7 @@ const Hero = () => {
   };
   const backendUrl = import.meta.env.MODE === 'production' 
   ? import.meta.env.VITE_BACKEND_URL 
-  : 'http://127.0.0.1:80';
+  : 'http://127.0.0.1';
 
   const uploadResumeAndNavigate = async () => {
     const file = document.getElementById("resumeUpload").files[0];
