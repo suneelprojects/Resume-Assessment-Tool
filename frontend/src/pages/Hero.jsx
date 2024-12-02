@@ -43,9 +43,10 @@ const Hero = () => {
       document.getElementById("resumeUpload").click();
     }
   };
-  const backendUrl = import.meta.env.MODE === 'production' 
-  ? import.meta.env.VITE_BACKEND_URL 
-  : 'http://127.0.0.1:80';
+  // const backendUrl = import.meta.env.MODE === 'production' 
+  // ? import.meta.env.VITE_BACKEND_URL 
+  // : 'http://127.0.0.1:80';
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:5000";
 
   const uploadResumeAndNavigate = async () => {
     const file = document.getElementById("resumeUpload").files[0];
@@ -88,7 +89,7 @@ const Hero = () => {
             Is your resume good <span className="block">enough?</span>
           </motion.h1>
           <motion.p variants={FadeUp(0.8)} initial="initial" animate="animate" className="text-gray-200 max-w-[550px] font-roboto text-[18px]">
-            Find out instantly. Upload your resume and our free resume scanner will evaluate it against key criteria hiring managers and applicant tracking systems (ATS) look for. Get actionable feedback on how to improve your resume's success rates.
+            Find out instantly. Upload your resume and our free resume scanner will evaluate it against key criteria hiring managers and applicant tracking systems (ATS) look for. Get actionable feedback on how to improve your resume's success rate.
           </motion.p>
           <motion.div variants={FadeUp(1)} initial="initial" animate="animate" className="flex justify-center md:justify-start">
             <label

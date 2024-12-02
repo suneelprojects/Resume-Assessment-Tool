@@ -8,7 +8,7 @@ from resume_model import ResumeModel
 app = Flask(__name__)
 
 # Enable CORS for all origins
-CORS(app, origins="http://devopsdost.xyz")
+CORS(app, origins="*")
 
 # Get the environment (production or local) from environment variables
 FLASK_ENV = os.getenv('FLASK_ENV', 'production')  # Default to production if not set
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     # Run the app on the appropriate host and port based on the environment
     if FLASK_ENV == 'production':
         # For production, bind to the host and port for deployment (e.g., devopsdost.xyz)
-        app.run(debug=False, host='0.0.0.0', port=80)  # Production server, port 80
+        app.run(debug=False, host='0.0.0.0', port=5000)  # Production server, port 80
     else:
         # For local development, use localhost and port 5000
         app.run(debug=True, host='0.0.0.0', port=5000)  # Local development
