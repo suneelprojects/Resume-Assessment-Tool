@@ -57,10 +57,14 @@ const Hero = () => {
    
     try {
       // Make an API call to upload the resume and extract text
-      const response = await fetch(`${backendUrl}/api/extract_resume`, {
-        method: "POST",
-        body: formData,
-      });
+      const apiUrl = backendUrl.includes(":5000") 
+      ? `${backendUrl}/api/extract_resume`
+      : `${backendUrl}:5000/api/extract_resume`;
+      
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      body: formData,
+    });
       const data = await response.json();
   
       if (response.ok) {
