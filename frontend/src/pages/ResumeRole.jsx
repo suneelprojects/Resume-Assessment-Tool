@@ -15,6 +15,7 @@ const ResumeRole = () => {
     const [loading, setLoading] = useState(false);
 
     const location = useLocation();
+
     const predictionResultRef = useRef(null);
 
     useEffect(() => {
@@ -73,6 +74,7 @@ const ResumeRole = () => {
         setDomain(e.target.value);
         setRole("");
     };
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:5000";
 
     const handleRoleChange = (e) => {
         setRole(e.target.value);
@@ -87,21 +89,21 @@ const ResumeRole = () => {
         }
 
         setLoading(true);
-        const backendUrl = import.meta.env.MODE === 'production' 
-        ? import.meta.env.VITE_BACKEND_URL 
-        : 'http://127.0.0.1:80';
-      
-        try {
-            const response = await fetch(`${backendUrl}/predict`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    resume_text: resumeText,
-                    input_role: role,
-                }),
-            });
+        const apiUrl = backendUrl.includes(":5000") 
+        ? `${backendUrl}/predict`
+        : `${backendUrl}:5000/predict`;
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                resume_text: resumeText,
+                input_role: role,
+            }),
+        });
 
             const data = await response.json();
             if (response.ok) {
@@ -113,7 +115,7 @@ const ResumeRole = () => {
             }
         } catch (err) {
             setError("Failed to connect to the backend");
-            setPredictionResult(null);
+            // setPredictionResult(null);
         } finally {
             setLoading(false);
         }
@@ -131,56 +133,6 @@ const ResumeRole = () => {
         return phone.replace(/(\d{2})(\d{5})(\d{5})/, "+$1 $2 $3");
     };
 
-    const renderDynamicSection = (sectionTitle, sectionData) => {
-        if (!sectionData) return null;
-        if (Array.isArray(sectionData)) {
-            // Format arrays nicely, with commas and spaces
-            return (
-                <div className="border p-4 rounded-xl shadow-md">
-                    <strong>{sectionTitle}:</strong>
-                    {sectionData.map((item, index) => (
-                        <div key={index} className="text-gray-800">{item}</div>
-                    ))}
-                </div>
-            );
-        } else {
-            // Ensure no trailing spaces or extra characters
-            return (
-                <div className="border p-4 rounded-xl shadow-md">
-                    <strong>{sectionTitle}:</strong> {sectionData.trim()}
-                </div>
-            );
-        }
-    };
-
-    const renderProjects = (projects) => {
-        if (!projects) return null;
-        return (
-            <div className="border p-4 rounded-xl shadow-md">
-                <strong>Projects:</strong>
-                <ul className="list-disc pl-6 mt-2">
-                    {projects.split(/[\n•]+/).map((project, index) => (
-                        project.trim() && <li key={index} className="text-gray-800">{project.trim()}</li>
-                    ))}
-                </ul>
-            </div>
-        );
-    };
-
-    const renderCertifications = (certifications) => {
-        if (!certifications) return null;
-        return (
-            <div className="border p-4 rounded-xl shadow-md">
-                <strong>Certifications:</strong>
-                <ul className="list-disc pl-6 mt-2">
-                    {certifications.split(/[\n•]+/).map((certification, index) => (
-                        certification.trim() && <li key={index} className="text-gray-800">{certification.trim()}</li>
-                    ))}
-                </ul>
-            </div>
-        );
-    };
-
     return (
         <div className="min-h-screen flex flex-col justify-center items-center pt-16 relative overflow-hidden bg-gradient-to-r from-teal-400 to-indigo-500">
             <div className="container max-w-7xl mx-auto p-8 flex flex-col md:flex-row gap-12 items-start justify-center relative mt-8 space-y-12 md:space-y-0">
@@ -194,22 +146,84 @@ const ResumeRole = () => {
                     <div className="space-y-2">
                         {parsedData ? (
                             <>
-                                {renderDynamicSection("Name", parsedData.name)}
-                                {renderDynamicSection("Email", parsedData.email)}
-                                {renderDynamicSection("Phone", formatPhoneNumber(parsedData.mobile_number))}
-                                {renderDynamicSection("Skills", parsedData.skills)}
-                                {renderDynamicSection("Education", parsedData.education)}
-                                {renderDynamicSection("Experience", parsedData.experience)}
-                                {renderProjects(parsedData.projects)}
-                                {renderCertifications(parsedData.certifications)}
-                                {renderDynamicSection("Links", parsedData.links)}
+                                {/* Name */}
+                                {parsedData.name && (
+                                    <div className="border p-4 rounded-xl shadow-md">
+                                        <strong>Name:</strong> {parsedData.name || "N/A"}
+                                    </div>
+                                )}
+
+                                {/* Email */}
+                                {parsedData.email && (
+                                    <div className="border p-4 rounded-xl shadow-md">
+                                        <strong>Email:</strong> {parsedData.email || "N/A"}
+                                    </div>
+                                )}
+
+                                {/* Phone */}
+                                {parsedData.mobile_number && (
+                                    <div className="border p-4 rounded-xl shadow-md">
+                                        <strong>Phone:</strong> {formatPhoneNumber(parsedData.mobile_number) || "N/A"}
+                                    </div>
+                                )}
+
+                                {/* Skills */}
+                                {parsedData.skills && parsedData.skills.length > 0 ? (
+                                    <div className="border p-4 rounded-xl shadow-md">
+                                        <strong>Skills:</strong> {parsedData.skills.join(', ') || "N/A"}
+                                    </div>
+                                ) : (
+                                    <div className="border p-4 rounded-xl shadow-md">
+                                        <strong>Skills:</strong> N/A
+                                    </div>
+                                )}
+
+                                {/* Education */}
+                                {parsedData.education && (
+                                    <div className="border p-4 rounded-xl shadow-md">
+                                        <strong>Education:</strong> {parsedData.education || "N/A"}
+                                    </div>
+                                )}
+
+                                {/* Experience */}
+                                {parsedData.experience && (
+                                    <div className="border p-4 rounded-xl shadow-md">
+                                        <strong>Experience:</strong> {parsedData.experience || "N/A"}
+                                    </div>
+                                )}
+
+                                {/* Projects */}
+                                {parsedData.projects && parsedData.projects !== null && (
+    <div className="border p-4 rounded-xl shadow-md">
+        <strong>Projects:</strong>
+        <ul className="list-disc pl-6 mt-2">
+            {parsedData.projects
+                .split(/[\n•]+/) // Split by bullet points (•), dashes (-), or newlines (\n)
+                .map((project, index) => project.trim() && (  // Filter out empty strings after trimming
+                    <li key={index} className="text-gray-800">{project.trim()}</li>
+                ))
+            }
+        </ul>
+    </div>
+)}
+
+
+                                {/* Soft Skills */}
+                                {parsedData.soft_skills && parsedData.soft_skills.length > 0 ? (
+                                    <div className="border p-4 rounded-xl shadow-md">
+                                        <strong>Soft Skills:</strong> {parsedData.soft_skills.join(', ') || "N/A"}
+                                    </div>
+                                ) : (
+                                    <div className="border p-4 rounded-xl shadow-md">
+                                        <strong>Soft Skills:</strong> N/A
+                                    </div>
+                                )}
                             </>
                         ) : (
                             <p>Parsed data will be shown here.</p>
                         )}
                     </div>
                 </motion.div>
-
                 {/* Right Card for Domain and Role Selection */}
                 <motion.div
                     initial={{ opacity: 0, x: 100 }}
@@ -265,59 +279,102 @@ const ResumeRole = () => {
                         <motion.div
                             initial={{ opacity: 0, y: 50 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5 }}
+                            transition={{ duration: 0.8 }}
+                            className="w-full bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center"
                         >
-                            <h3 className="text-lg font-semibold">Top Suggested Roles</h3>
-                            <ul className="space-y-2">
-                                {filteredSuggestedRoles.map((suggestedRole, index) => (
-                                    <li key={index} className="bg-white p-4 rounded-lg shadow-md">
-                                        <span className="font-bold">{suggestedRole.role}</span>
-                                    </li>
-                                ))}
-                            </ul>
+                            <div className="w-full mb-4">
+                                <h3 className="text-xl font-semibold text-gray-900">Input Role: {predictionResult.given_role}</h3>
+                            </div>
+
+                            <div className="w-full mb-4">
+                                <CircularProgressbar
+                                    value={predictionResult.confidence}
+                                    text={`${predictionResult.confidence.toFixed(2)}%`}
+                                    strokeWidth={6}
+                                    styles={{
+                                        path: {
+                                            stroke: "#f97316",
+                                        },
+                                        text: {
+                                            fill: "#f97316",
+                                            fontSize: "18px",
+                                        },
+                                    }}
+                                />
+                            </div>
                         </motion.div>
                     </div>
 
-                    <div className="flex flex-col gap-6 justify-center md:w-2/3 w-full">
-                        <motion.div
-                            initial={{ opacity: 0, y: 50 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5 }}
-                        >
-                            <h3 className="text-lg font-semibold">Prediction Confidence</h3>
-                            <CircularProgressbar
-                                value={predictionResult.confidence}
-                                text={`${Math.round(predictionResult.confidence)}%`}
-                            />
-                        </motion.div>
-                    </div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                        className="w-full md:w-2/3 bg-white p-6 rounded-2xl shadow-xl"
+                    >
+                        <h3 className="text-2xl font-semibold text-gray-900 mb-6">
+                            Suggested Roles Based on Your Profile
+                        </h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            {filteredSuggestedRoles.map((suggestedRole, index) => (
+                                <motion.div
+                                    key={index}
+                                    className="bg-white p-6 rounded-2xl shadow-2xl hover:shadow-2xl transform transition-all duration-300 flex flex-col justify-between items-center"
+                                >
+                                    <h4 className="text-lg font-semibold text-gray-800">{suggestedRole.role}</h4>
+
+                                    <div className="w-full mt-4">
+                                        <CircularProgressbar
+                                            value={suggestedRole.confidence}
+                                            text={`${suggestedRole.confidence.toFixed(2)}%`}
+                                            strokeWidth={8}
+                                            styles={{
+                                                path: {
+                                                    stroke: "#34D399",
+                                                },
+                                                text: {
+                                                    fill: "#34D399",
+                                                    fontSize: "16px",
+                                                },
+                                            }}
+                                        />
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </motion.div>
                 </div>
             )}
+ <style jsx>{`
+                /* Custom scrollbar styles */
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                    height: 6px;  /* For horizontal scrollbar */
+                }
 
-<style jsx>{`
-               /* Custom scrollbar styles */
-               .custom-scrollbar::-webkit-scrollbar {
-                   width: 6px;
-                   height: 6px;  /* For horizontal scrollbar */
-               }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background-color: #f97316; /* Thumb color */
+                    border-radius: 10px;
+                    border: 2px solid #f97316; /* Optional: adds a border for more defined look */
+                }
 
-               .custom-scrollbar::-webkit-scrollbar-thumb {
-                   background-color: #f97316; /* Thumb color */
-                   border-radius: 10px;
-                   border: 2px solid #f97316; /* Optional: adds a border for more defined look */
-               }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: #f0f0f0; /* Light background for the track */
+                    border-radius: 10px;
+                }
 
-               .custom-scrollbar::-webkit-scrollbar-track {
-                   background: #f0f0f0; /* Light background for the track */
-                   border-radius: 10px;
-               }
-
-               .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                   background-color: #ff6e40; /* Slightly darker thumb color on hover */
-               }
-           `}</style>
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background-color: #ff6e40; /* Slightly darker thumb color on hover */
+                }
+            `}</style>
             {error && (
-                <div className="text-red-500 mt-6 text-center">{error}</div>
+                <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="mt-8 bg-red-100 text-red-700 p-6 rounded-2xl shadow-md"
+                >
+                    <p>{error}</p>
+                </motion.div>
             )}
         </div>
     );
