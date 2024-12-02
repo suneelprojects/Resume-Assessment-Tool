@@ -4,6 +4,7 @@ services:
   frontend:
     build:
       context: ./frontend  # Path to your frontend directory
+    image: suneel09/resumetool-frontend:latest  # Image name for frontend
     ports:
       - "80:80"
     networks:
@@ -12,6 +13,7 @@ services:
   backend:
     build:
       context: ./backend  # Path to your backend directory
+    image: suneel09/resumetool-backend:latest  # Image name for backend
     ports:
       - "5000:5000"
     networks:
