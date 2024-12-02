@@ -8,7 +8,7 @@ from resume_model import ResumeModel
 app = Flask(__name__)
 
 # Enable CORS for all origins
-CORS(app)
+CORS(app, origins="http://devopsdost.xyz")
 
 # Get the environment (production or local) from environment variables
 FLASK_ENV = os.getenv('FLASK_ENV', 'production')  # Default to production if not set
