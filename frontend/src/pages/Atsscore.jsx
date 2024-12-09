@@ -209,12 +209,12 @@ const Atsscore = () => {
                     key={index}
                     className="flex flex-col items-center bg-white p-4 rounded-xl shadow-lg"
                   >
-                    <div className="w-20 h-20">
+                    <div className="w-40 h-40">
                       <CircularProgressbar
                         value={results[key]}
                         text={`${results[key].toFixed(1)}%`}
                         styles={buildStyles({
-                          textSize: "16px",
+                          textSize: "24px",
                           pathColor: index % 2 === 0 ? "#4F46E5" : "#E11D48",
                           textColor: "#111827",
                           trailColor: "#D1D5DB",

@@ -384,11 +384,16 @@ const ResumeRole = () => {
     </motion.div>
   </div>
 )}
-   {predictionResult && !loading && (
-  <div ref={predictionResultRef} className="mt-12 flex flex-col md:flex-row p-6 gap-8 w-full justify-center">
+  {predictionResult && !loading && (
+  <div
+    ref={predictionResultRef}
+    className="mt-12 flex flex-col md:flex-row p-6 gap-8 w-full justify-center"
+  >
     {/* Confidence Level Card */}
     <div className="flex flex-col items-center md:w-1/3 w-full p-6 bg-white rounded-3xl shadow-xl border border-gray-200">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">Confidence Level</h3>
+      <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+        Confidence Level
+      </h3>
       <CircularProgressbar
         value={predictionResult.confidence}
         text={`${predictionResult.confidence.toFixed(2)}%`}
@@ -396,9 +401,17 @@ const ResumeRole = () => {
           pathColor: "#4F46E5",
           textColor: "#1F2937",
           trailColor: "#D1D5DB",
+          textSize: "18px",
+          text: {
+            fill: "#f97316",
+            fontFamily: "'Inter', sans-serif",
+            fontWeight: "500",
+          },
         })}
       />
-      <p className="text-center mt-4 text-sm text-gray-600">How closely your profile matches the role</p>
+      <p className="text-center mt-4 text-sm text-gray-600">
+        How closely your profile matches the role
+      </p>
     </div>
 
     {/* Missing Skills Section */}
@@ -409,18 +422,21 @@ const ResumeRole = () => {
           {predictionResult.missing_skills.map((skill, idx) => (
             <span
               key={idx}
-              className="inline-block bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-medium shadow-sm"
+              className="inline-block bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-medium shadow-sm border border-red-300"
             >
               {skill}
             </span>
           ))}
         </div>
       ) : (
-        <p className="text-sm text-gray-500">You have all the required skills for the role!</p>
+        <p className="text-sm text-gray-500">
+          You have all the required skills for the role!
+        </p>
       )}
     </div>
   </div>
 )}
+
 
 {/* Recommendations Section */}
 {predictionResult && !loading && (
@@ -432,11 +448,11 @@ const ResumeRole = () => {
       <h3 className="text-xl font-semibold text-gray-900 mb-4">Skills You Already Have</h3>
       <div className="text-gray-700">
         {predictionResult.resume_skills.length > 0 ? (
-          <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-8 gap-4">
             {predictionResult.resume_skills.map((skill, index) => (
               <li
                 key={index}
-                className="bg-green-100 text-green-700 py-2 px-4 rounded-lg text-center shadow-sm"
+                className="bg-green-100 text-green-700 font-semibold text-sm py-1 px-1 rounded-lg text-center shadow-sm border border-green-300"
               >
                 {skill}
               </li>
@@ -455,11 +471,11 @@ const ResumeRole = () => {
       </h3>
       <div className="text-gray-700">
         {predictionResult.missing_skills.length > 0 ? (
-          <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-8 gap-4">
             {predictionResult.missing_skills.map((skill, index) => (
               <li
                 key={index}
-                className="bg-red-100 text-red-700 py-2 px-4 rounded-lg text-center shadow-sm"
+                className="bg-red-100 text-red-700 font-semibold text-sm py-2 px-4 rounded-lg text-center shadow-sm border border-red-300"
               >
                 {skill}
               </li>
