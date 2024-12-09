@@ -13,6 +13,7 @@ export const FadeUp = (delay) => ({
 const Hero = () => {
   const [fileName, setFileName] = useState("");
   const [buttonText, setButtonText] = useState("Upload Your Resume");
+  const [resumeData, setResumeData] = useState(null);
   const navigate = useNavigate();
 
   // Function to handle file selection
@@ -37,43 +38,37 @@ const Hero = () => {
   // Handle button click
   const handleButtonClick = () => {
     if (buttonText === "Continue") {
-      // Send the file to the backend for processing and then navigate to the JobDescription page
       uploadResumeAndNavigate();
     } else {
       document.getElementById("resumeUpload").click();
     }
   };
-  // const backendUrl = import.meta.env.MODE === 'production' 
-  // ? import.meta.env.VITE_BACKEND_URL 
-  // : 'http://127.0.0.1:80';
+
   const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:5000";
 
   const uploadResumeAndNavigate = async () => {
     const file = document.getElementById("resumeUpload").files[0];
     if (!file) return;
-  
+
     const formData = new FormData();
     formData.append("resume", file);
-   
+
     try {
       // Make an API call to upload the resume and extract text
-      const apiUrl = backendUrl.includes(":5000") 
-      ? `${backendUrl}/api/extract_resume`
-      : `${backendUrl}:5000/api/extract_resume`;
-      
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      body: formData,
-    });
+      const apiUrl = backendUrl.includes(":5000")
+        ? `${backendUrl}/api/extract_resume`
+        : `${backendUrl}:5000/api/extract_resume`;
+
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        body: formData,
+      });
+
       const data = await response.json();
-  
+
       if (response.ok) {
-        // Extracted resume text and parsed data returned by backend
-        const resumeText = data.extractedText;
-        const parsedData = data.parsedData;
-  
-        // Pass the extracted resume text and parsed data as state to the JobDescription page
-        navigate("/role", { state: { resumeText, parsedData } });
+        // Store the extracted data and show options
+        setResumeData(data);
       } else {
         alert("Error uploading resume.");
       }
@@ -81,7 +76,14 @@ const Hero = () => {
       alert("Error uploading resume.");
     }
   };
-  
+
+  // Function to navigate with the extracted data
+  const handleNavigate = (path) => {
+    if (resumeData) {
+      navigate(path, { state: { resumeText: resumeData.extractedText, parsedData: resumeData.parsedData } });
+    }
+  };
+
   return (
     <section className="bg-gradient-to-r from-purple-600 to-blue-500 overflow-hidden relative flex flex-col justify-center pt-20 min-h-[calc(100vh-80px)]">
       <div className="container grid grid-cols-1 md:grid-cols-2 items-center">
@@ -129,6 +131,30 @@ const Hero = () => {
               />
             </label>
           </motion.div>
+
+          {/* Conditional rendering for navigation buttons after successful upload */}
+          {resumeData && (
+            <div className="flex justify-center md:justify-start space-x-4 mt-4">
+              <button
+                className="bg-white text-purple-600 hover:bg-purple-600 hover:text-white font-poppins px-4 py-2 rounded-md"
+                onClick={() => handleNavigate("/role")}
+              >
+                Check Role Score
+              </button>
+              <button
+                className="bg-white text-blue-600 hover:bg-blue-600 hover:text-white font-poppins px-4 py-2 rounded-md"
+                onClick={() => handleNavigate("/ats")}
+              >
+                Check ATS
+              </button>
+              <button
+                className="bg-white text-purple-600 hover:bg-purple-600 hover:text-white font-poppins px-4 py-2 rounded-md"
+                onClick={() => handleNavigate("/job-description")}
+              >
+                Check Job Description Score
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-center items-center mt-8 md:mt-0 relative z-10">

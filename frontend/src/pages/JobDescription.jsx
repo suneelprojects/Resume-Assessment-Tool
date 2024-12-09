@@ -5,12 +5,16 @@ import { useLocation, useNavigate } from "react-router-dom"; // useNavigate inst
 const JobDescription = () => {
   const [role, setRole] = useState("");
   const [jobDescription, setJobDescription] = useState("");
-  const [resumeText, setResumeText] = useState("");  // To hold the extracted resume text
-  const [results, setResults] = useState(null);  // To hold the analysis results
-  const navigate = useNavigate();  // For navigation
+  const [resumeText, setResumeText] = useState(""); // To hold the extracted resume text
+  const [results, setResults] = useState(null); // To hold the analysis results
+  const [loading, setLoading] = useState(false); // Loading state
+  const [error, setError] = useState(null); // Error state
 
-  // Get the location from the router to access the state
-  const location = useLocation();
+  const navigate = useNavigate(); // For navigation
+  const location = useLocation(); // Get the location from the router to access the state
+
+  // Backend URL
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:5000";
 
   // Set the resume text from location state (passed from Hero component)
   useEffect(() => {
@@ -33,6 +37,12 @@ const JobDescription = () => {
       return;
     }
 
+    setLoading(true); // Set loading to true
+
+    const apiUrl = backendUrl.includes(":5000")
+      ? `${backendUrl}/api/analyze`
+      : `${backendUrl}:5000/api/analyze`;
+
     const requestData = {
       resumeText,
       jobDescription,
@@ -40,7 +50,7 @@ const JobDescription = () => {
     };
 
     try {
-      const response = await fetch("http://localhost:5000/api/analyze", {
+      const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -52,15 +62,20 @@ const JobDescription = () => {
 
       if (response.ok) {
         setResults(data);
-        // Use navigate instead of history.push
+        setError(null);
+        // Navigate to results page
         navigate("/results", {
-          state: { results: data },  // Passing results to the next page
+          state: { results: data }, // Passing results to the next page
         });
       } else {
+        setError(data.error || "An error occurred");
         alert("Error: " + data.error);
       }
     } catch (error) {
+      setError("Failed to connect to the backend");
       alert("Error occurred while analyzing: " + error.message);
+    } finally {
+      setLoading(false); // Set loading to false
     }
   };
 
@@ -102,10 +117,10 @@ const JobDescription = () => {
               className="w-full p-3 border border-gray-300 rounded-lg text-dark focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select a role</option>
-              <option value="softwareEngineer">Software Engineer</option>
-              <option value="dataScientist">Data Scientist</option>
-              <option value="productManager">Product Manager</option>
-              <option value="uxDesigner">UX Designer</option>
+              <option value="Junior Data Analyst">Junior Data Analyst</option>
+              <option value="Data Scientist">Data Scientist</option>
+              <option value="Product Manager">Product Manager</option>
+              <option value="UX Designer">UX Designer</option>
             </motion.select>
 
             {/* Job description input */}
@@ -131,8 +146,9 @@ const JobDescription = () => {
                 transition={{ duration: 0.5 }}
                 className="primary-btn px-6 py-2"
                 onClick={handleAnalyzeClick}
+                disabled={loading}
               >
-                Check Your Score
+                {loading ? "Analyzing..." : "Check Your Score"}
               </motion.button>
             </div>
           </div>

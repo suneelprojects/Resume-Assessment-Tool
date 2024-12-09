@@ -56,36 +56,85 @@ def extract_resume():
     except Exception as e:
         return jsonify({"error": f"Error: {str(e)}"}), 500
 
-
 @app.route('/api/analyze', methods=['POST'])
 def analyze():
     try:
+        # Parse the JSON request payload
         data = request.get_json()
         resume_text = data.get("resumeText")
         job_description_text = data.get("jobDescription")
         role = data.get("role")
 
+        # Validate input
         if not resume_text or not job_description_text or not role:
             return jsonify({"error": "Missing required fields"}), 400
 
-        ats_score = resume_model.calculate_ats_score(resume_text, job_description_text, role)
+        # Extract skills from the resume and job description
         resume_skills = resume_model.categorize_skills(resume_text)
         job_skills = resume_model.categorize_skills(job_description_text)
-        similarity_score, recommendation = resume_model.hugging_face_recommendation_bert(resume_text, job_description_text)
 
+        # Calculate the ATS score
+        ats_score, skill_score, section_score, formatting_score = resume_model.calculate_ats_score(
+            resume_text, job_skills["hard_skills"]
+        )
+
+        # Calculate semantic similarity and recommendations using BERT
+        similarity_score, recommendation = resume_model.hugging_face_recommendation_bert(
+            resume_text, job_description_text
+        )
+
+        # Combine the results into a single response object
         result = {
-            "ats_score": ats_score,
+            "ats_score": {
+                "overall": ats_score,
+                "skill_match": skill_score,
+                "section_presence": section_score,
+                "formatting": formatting_score,
+            },
             "skills_extracted_from_resume": resume_skills,
             "skills_extracted_from_job_description": job_skills,
             "semantic_similarity_score": similarity_score,
-            "recommendation": recommendation
+            "recommendation": recommendation,
         }
 
-        return jsonify(result)
+        # Return the results as JSON
+        return jsonify(result), 200
 
     except Exception as e:
         return jsonify({"error": f"Error: {str(e)}"}), 500
 
+@app.route('/api/calculate_ats', methods=['POST'])
+def calculate_ats():
+    try:
+        # Parse request JSON data
+        data = request.get_json()
+        resume_text = data.get('resume_text')
+        input_role = data.get('input_role')
+
+        if not resume_text or not input_role:
+            return jsonify({"error": "Missing required fields: 'resume_text' or 'input_role'"}), 400
+
+        # Call predict_role and retrieve the full dictionary
+        prediction_results = resume_model.predict_role(resume_text, input_role)
+
+        # Construct the response using the returned dictionary
+        response = {
+            "ats_score": prediction_results["ats_score"],
+            "skill_score": prediction_results["skill_score"],
+            "section_score": prediction_results["section_score"],
+            "formatting_score": prediction_results["formatting_score"],
+            "resume_skills": prediction_results["resume_skills"],
+            "missing_skills": prediction_results["missing_skills"],
+            "message": f"ATS-Friendly Score: {prediction_results['ats_score']:.2f}%, "
+                       f"Skill Match Score: {prediction_results['skill_score']:.2f}%, "
+                       f"Section Presence Score: {prediction_results['section_score']:.2f}%, "
+                       f"Formatting Score: {prediction_results['formatting_score']:.2f}%"
+        }
+
+        return jsonify(response), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Error occurred: {str(e)}"}), 500
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -97,20 +146,26 @@ def predict():
         if not resume_text or not input_role:
             return jsonify({"error": "Missing required fields"}), 400
 
-        # Predict role based on resume text
-        input_role_confidence, suggested_roles, suggested_confidences = resume_model.predict_role(resume_text, input_role)
+        # Call predict_role and retrieve the full dictionary
+        prediction_results = resume_model.predict_role(resume_text, input_role)
 
-        return jsonify({
-            "given_role": input_role,
-            "confidence": input_role_confidence,
-            "suggested_roles": [
-                {"role": role, "confidence": confidence}
-                for role, confidence in zip(suggested_roles[:10], suggested_confidences[:10])
-            ]
-        })
+        # Construct the response using the returned dictionary
+        response = {
+            "given_role": prediction_results["input_role"],
+            "confidence": prediction_results["input_role_confidence"],
+            "suggested_roles": prediction_results["suggested_roles"],
+            "resume_skills": prediction_results["resume_skills"],
+            "missing_skills": prediction_results["missing_skills"],
+        }
+
+        return jsonify(response), 200
 
     except Exception as e:
-        return jsonify({"error": f"Error: {str(e)}"}), 400
+        return jsonify({"error": f"Error: {str(e)}"}), 500
+
+    except Exception as e:
+        return jsonify({"error": f"Error: {str(e)}"}), 500
+
 
 
 if __name__ == "__main__":

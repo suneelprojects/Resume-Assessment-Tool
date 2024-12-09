@@ -9,6 +9,7 @@ import Footer from "./components/Footer";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import MainLayout from "./pages/MainLayout";
+import Atsscore from "./pages/Atsscore";
 
 // Get the API URL from the environment variables
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -22,6 +23,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<MainLayout apiUrl={apiUrl}/>} />
         <Route path="/job-description" element={<JobDescription apiUrl={apiUrl} />} />
+        <Route path="/ats" element={<Atsscore apiUrl={apiUrl} />} />
         <Route path="/role" element={<ResumeRole apiUrl={apiUrl} />} />
         <Route path="/results" element={<Results apiUrl={apiUrl} />} />
       </Routes>
