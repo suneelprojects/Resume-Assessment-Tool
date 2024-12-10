@@ -9,7 +9,6 @@ from collections import Counter
 import PyPDF2
 import docx
 
-
 class ResumeModel:
     def __init__(self):
         # Define base directory as the script's directory
@@ -20,13 +19,7 @@ class ResumeModel:
 
         # Load skills and education data dynamically
         self.hard_skills = self.load_skills_from_file(os.path.join(self.base_dir, "technical_skills_list.txt"))
-        self.soft_skills = [
-            "problem-solving", "communication", "teamwork", "leadership", "adaptability", "critical thinking",
-            "time management", "creativity", "analytical skills"
-        ]
-        self.other_skills = [
-            "Agile", "Jira", "project management", "customer service", "stakeholder management"
-        ]
+
         self.education_keywords = self.load_skills_from_file(os.path.join(self.base_dir, "academic_degrees_list.txt"))
 
         # Initialize BERT model and tokenizer
@@ -42,7 +35,8 @@ class ResumeModel:
         """Load role skills from a JSON file."""
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
-                return json.load(file)
+                data = json.load(file)
+                return data
         except FileNotFoundError:
             print(f"Error: File not found at {file_path}. Please check the file path.")
             return {}
@@ -81,40 +75,26 @@ class ResumeModel:
 
     def categorize_skills(self, text):
         """Categorize skills into hard, soft, and other categories."""
-        skills = {"hard_skills": [], "soft_skills": [], "other_skills": []}
+        skills = {"hard_skills": []}
 
-        # Normalize the text for case-insensitive matching
-        normalized_text = text.lower()
-
-        for category, skills_list in [
-            ("hard_skills", self.hard_skills),
-            ("soft_skills", self.soft_skills),
-            ("other_skills", self.other_skills)
-        ]:
+        for category, skills_list in [("hard_skills", self.hard_skills)]:
             for skill in skills_list:
-                # Normalize skill for case-insensitive matching
-                normalized_skill = skill.lower()
-                if re.search(r'\b' + re.escape(normalized_skill) + r'\b', normalized_text):
-                    skills[category].append(skill)  # Keep original case in output
+                if re.search(r'\b' + re.escape(skill) + r'\b', text, re.IGNORECASE):
+                    skills[category].append(skill)
 
         return skills
 
-    def calculate_missing_skills(self, required_skills, resume_skills):
-        """
-        Identify missing skills from the required skills list.
-        Case-insensitive comparison is used to account for variations in casing.
-        """
-        # Normalize skills for comparison
-        normalized_required_skills = {skill.lower(): skill for skill in required_skills}
-        normalized_resume_skills = {skill.lower() for skill in resume_skills}
+    def extract_education(self, text):
+        """Extract education details from text."""
+        return [degree for degree in self.education_keywords if re.search(r'\b' + re.escape(degree) + r'\b', text, re.IGNORECASE)]
 
-        # Find missing skills by checking normalized keys
-        missing_skills = [
-            original_skill for normalized_skill, original_skill in normalized_required_skills.items()
-            if normalized_skill not in normalized_resume_skills
-        ]
-
-        return missing_skills
+    def extract_experience(self, text):
+        """Extract total experience in years from text."""
+        experience_years = re.search(r'(\d+)[\s-]?(?:years|yrs)[\s-]?(?:of)?[\s-]?(?:experience)?', text, re.IGNORECASE)
+        experience_months = re.search(r'(\d+)[\s-]?(?:months?|mos?)[\s-]?(?:of)?[\s-]?(?:experience)?', text, re.IGNORECASE)
+        years = int(experience_years.group(1)) if experience_years else 0
+        months = int(experience_months.group(1)) if experience_months else 0
+        return years + months / 12
 
     def calculate_ats_score(self, resume_text, required_skills):
         """Calculate ATS-friendly score."""
@@ -142,6 +122,36 @@ class ResumeModel:
         ats_score = (skill_score * 0.6) + (section_score * 0.3) + (formatting_score * 0.1)
         return ats_score, skill_score, section_score, formatting_score
 
+
+    def hugging_face_recommendation_bert(self, resume_text, job_description):
+        """Use BERT for semantic similarity and skill recommendation."""
+        resume_text_truncated = resume_text[:512]
+        job_desc_text_truncated = job_description[:512]
+
+        resume_input_ids = self.bert_tokenizer(resume_text_truncated, return_tensors='pt', truncation=True, padding=True)
+        job_desc_input_ids = self.bert_tokenizer(job_desc_text_truncated, return_tensors='pt', truncation=True, padding=True)
+
+        resume_embedding = self.bert_model(**resume_input_ids).last_hidden_state.mean(dim=1).detach().numpy()
+        job_desc_embedding = self.bert_model(**job_desc_input_ids).last_hidden_state.mean(dim=1).detach().numpy()
+
+        cosine_similarity = np.dot(resume_embedding, job_desc_embedding.T) / (
+            np.linalg.norm(resume_embedding) * np.linalg.norm(job_desc_embedding))
+        similarity_score = cosine_similarity.item() * 100
+
+        resume_skills = self.categorize_skills(resume_text)
+        job_skills = self.categorize_skills(job_description)
+
+        resume_hard_skills = set(resume_skills["hard_skills"])
+        job_hard_skills = set(job_skills["hard_skills"])
+
+        missing_skills = list(job_hard_skills - resume_hard_skills)
+
+        recommendation = "Your resume is a good match for the job description!" if similarity_score >= 50 else "Your resume does not match well with the job description."
+
+        if missing_skills:
+            recommendation += f"\nHowever, you may want to consider adding the following skills to your resume: {', '.join(missing_skills)}"
+
+        return similarity_score, recommendation
     def predict_role(self, resume_text, input_role):
         """
         Predict the role based on the resume text and provide suggestions for improvement.
@@ -170,8 +180,8 @@ class ResumeModel:
         # Get skills required for the input role
         required_skills = self.role_skills.get(input_role, [])
 
-        # Find missing skills with case normalization
-        missing_skills = self.calculate_missing_skills(required_skills, resume_skills)
+        # Find missing skills
+        missing_skills = [skill for skill in required_skills if skill not in resume_skills]
 
         # Calculate ATS-friendly score
         ats_score, skill_score, section_score, formatting_score = self.calculate_ats_score(
@@ -188,10 +198,27 @@ class ResumeModel:
             "formatting_score": formatting_score,
             "suggested_roles": [
                 {"role": role, "confidence": confidence}
-                for role, confidence in zip(suggested_roles[:20], suggested_confidences[:20])  # Top 20 roles
+                for role, confidence in zip(suggested_roles[:20], suggested_confidences[:20])  # Top 5 roles
             ],
             "resume_skills": resume_skills,
             "missing_skills": missing_skills,
         }
+
+        # Print results for easier debugging or viewing
+        print(f"Role Confidence for '{input_role}': {input_role_confidence:.2f}%")
+        print(f"ATS-Friendly Score: {ats_score:.2f}%")
+        print(f"  - Skill Match Score: {skill_score:.2f}%")
+        print(f"  - Section Presence Score: {section_score:.2f}%")
+        print(f"  - Formatting Score: {formatting_score:.2f}%")
+        print("\nTop Suggested Roles:")
+        for role in results["suggested_roles"]:
+            print(f"  - {role['role']}: {role['confidence']:.2f}%")
+        print(f"\nMatched Skills: {', '.join(resume_skills) if resume_skills else 'None'}")
+        print(f"Missing Skills for '{input_role}':")
+        if missing_skills:
+            for skill in missing_skills:
+                print(f"  - {skill}")
+        else:
+            print("  - None")
 
         return results
