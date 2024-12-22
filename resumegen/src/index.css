@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* body {
+    background-color: red;
+  } */
+
+.custom-quill-editor .ql-editor {
+    padding-left: 10px;
+    padding-top: 7px;
+    font-size: 16px;
+    line-height: 1.5;
+    max-height: 180px; 
+    overflow-y: auto; 
+    white-space: pre-wrap; 
+}
+
+.custom-quill-editor .ql-container {
+    border: none;
+    height: 200px; 
+    background-color: white; 
+    overflow: hidden; 
+}
+
+.custom-quill-editor .ql-editor ol,
+.custom-quill-editor .ql-editor ul {
+    margin-left: 0;
+    padding-left: 0;
+}
