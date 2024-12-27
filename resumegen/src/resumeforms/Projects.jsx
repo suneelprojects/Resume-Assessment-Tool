@@ -237,6 +237,12 @@ const Projects = () => {
                   <ReactQuill
                     theme="snow"
                     placeholder="Describe your project"
+                    modules={{
+                      toolbar: [
+                        [{ header: [1, 2, 3, false] }], // Headers
+                        ["bold", "italic", "underline", "strike", { list: "bullet" }], // Basic formatting
+                      ],
+                    }}
                     style={{
                       backgroundColor: "rgba(255,255,255,0.7)",
                       borderRadius: "0.5rem",

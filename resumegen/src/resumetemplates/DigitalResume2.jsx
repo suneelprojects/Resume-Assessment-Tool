@@ -6,7 +6,7 @@ import {
   faMapMarkerAlt,
   faLink,
 } from "@fortawesome/free-solid-svg-icons";
-import { faLinkedin } from "@fortawesome/free-brands-svg-icons";
+import { faGithub, faLinkedin } from "@fortawesome/free-brands-svg-icons";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../services/firebaseConfig";
 import { auth } from "../services/firebaseConfig";
@@ -171,69 +171,125 @@ const DigitalResume2 = () => {
     const parsed = parseDescription(description);
     return !parsed || parsed.length === 0 || parsed.every(item => !item || item.trim() === '');
   };
-  
-    const hasObjective = () => {
-      return objective && objective.trim() !== '' && objective !== '<br>';
-    };
-  
-    const hasSkills = () => {
-      if (!skills || typeof skills !== 'object') return false;
-  
-      return Object.entries(skills).some(([category, items]) => {
-        if (!Array.isArray(items)) return false;
-        return items.some(item => item && item.trim() !== '');
-      });
-    };
-  
-    const hasWorkExperience = () => {
-      if (!Array.isArray(workExperience) || workExperience.length === 0) {
-        return false;
-      }
-  
-      return workExperience.some(exp => {
-        const hasCompany = exp.company && exp.company.trim() !== '';
-        const hasJobTitle = exp.jobTitle && exp.jobTitle.trim() !== '';
-        const hasDescription = !isEmptyDescription(exp.description);
-        const hasCity = exp.city && exp.city.trim() !== '';
-        const hasDates = (exp.startDate && exp.startDate.trim() !== '') ||
-          (exp.endDate && exp.endDate.trim() !== '');
-  
-        return hasCompany || hasJobTitle || hasDescription || hasCity || hasDates;
-      });
-    };
-  
-    const hasProjects = () => {
-      if (!Array.isArray(projects) || projects.length === 0) return false;
-  
-      return projects.some(project => {
-        const hasName = project.name && project.name.trim() !== '';
-        const hasDescription = project.description && parseHTML(project.description).length > 0;
-        const hasLink = project.link && project.link.trim() !== '';
-  
-        return hasName || hasDescription || hasLink;
-      });
-    };
-  
-    const hasEducation = () => {
-      if (!Array.isArray(education) || education.length === 0) return false;
-  
-      return education.some(edu => {
-        const hasDegree = edu.degree && edu.degree.trim() !== '';
-        const hasUniversity = edu.university && edu.university.trim() !== '';
-        const hasMajor = edu.major && edu.major.trim() !== '';
-        const hasCity = edu.city && edu.city.trim() !== '';
-        const hasDates = (edu.startDate && edu.startDate.trim() !== '') ||
-          (edu.endDate && edu.endDate.trim() !== '');
-  
-        return hasDegree || hasUniversity || hasMajor || hasCity || hasDates;
-      });
-    };
-  
-    const hasAchievements = () => {
-      if (!achievements) return false;
-      const parsedAchievements = parseAchievements(achievements);
-      return parsedAchievements.length > 0;
-    };
+
+  const hasObjective = () => {
+    return objective && objective.trim() !== '' && objective !== '<br>';
+  };
+
+  const hasSkills = () => {
+    if (!skills || typeof skills !== 'object') return false;
+
+    return Object.entries(skills).some(([category, items]) => {
+      if (!Array.isArray(items)) return false;
+      return items.some(item => item && item.trim() !== '');
+    });
+  };
+
+  const hasWorkExperience = () => {
+    if (!Array.isArray(workExperience) || workExperience.length === 0) {
+      return false;
+    }
+
+    return workExperience.some(exp => {
+      const hasCompany = exp.company && exp.company.trim() !== '';
+      const hasJobTitle = exp.jobTitle && exp.jobTitle.trim() !== '';
+      const hasDescription = !isEmptyDescription(exp.description);
+      const hasCity = exp.city && exp.city.trim() !== '';
+      const hasDates = (exp.startDate && exp.startDate.trim() !== '') ||
+        (exp.endDate && exp.endDate.trim() !== '');
+
+      return hasCompany || hasJobTitle || hasDescription || hasCity || hasDates;
+    });
+  };
+
+  const hasProjects = () => {
+    if (!Array.isArray(projects) || projects.length === 0) return false;
+
+    return projects.some(project => {
+      const hasName = project.name && project.name.trim() !== '';
+      const hasDescription = project.description && parseHTML(project.description).length > 0;
+      const hasLink = project.link && project.link.trim() !== '';
+
+      return hasName || hasDescription || hasLink;
+    });
+  };
+
+  const hasEducation = () => {
+    if (!Array.isArray(education) || education.length === 0) return false;
+
+    return education.some(edu => {
+      const hasDegree = edu.degree && edu.degree.trim() !== '';
+      const hasUniversity = edu.university && edu.university.trim() !== '';
+      const hasMajor = edu.major && edu.major.trim() !== '';
+      const hasCity = edu.city && edu.city.trim() !== '';
+      const hasDates = (edu.startDate && edu.startDate.trim() !== '') ||
+        (edu.endDate && edu.endDate.trim() !== '');
+
+      return hasDegree || hasUniversity || hasMajor || hasCity || hasDates;
+    });
+  };
+
+  const hasAchievements = () => {
+    if (!achievements) return false;
+    const parsedAchievements = parseAchievements(achievements);
+    return parsedAchievements.length > 0;
+  };
+
+  // Add helper function to check if contact section should be displayed
+  const hasContactInfo = (personalDetails) => {
+    const {
+      phone,
+      email,
+      address,
+      linkedin,
+      github,
+      otherLinks
+    } = personalDetails || {};
+
+    return (
+      (phone && phone.trim() !== '') ||
+      (email && email.trim() !== '') ||
+      (address && address.trim() !== '') ||
+      (linkedin && linkedin.trim() !== '') ||
+      (github && github.trim() !== '') ||
+      (otherLinks && otherLinks.length > 0 && otherLinks.some(link => link.url && link.url.trim() !== ''))
+    );
+  };
+
+  // Add helper function to check if header should be displayed
+  const hasHeaderInfo = (personalDetails) => {
+    const {
+      firstName,
+      lastName,
+      jobTitle,
+      summary
+    } = personalDetails || {};
+
+    return (
+      (firstName && firstName.trim() !== '') ||
+      (lastName && lastName.trim() !== '') ||
+      (jobTitle && jobTitle.trim() !== '') ||
+      (summary && summary.trim() !== '')
+    );
+  };
+
+  // Contact item component
+  const ContactItem = ({ icon, value, href, label }) => {
+    if (!value || value.trim() === '') return null;
+
+    const content = href ? (
+      <a href={href} target="_blank" rel="noopener noreferrer">
+        {label || value}
+      </a>
+    ) : value;
+
+    return (
+      <div className="flex items-center space-x-2 text-white">
+        <FontAwesomeIcon icon={icon} />
+        <span>{content}</span>
+      </div>
+    );
+  };
 
   // Loading spinner component (same as in ResumeEditor)
   const LoadingSpinner = () => (
@@ -269,63 +325,94 @@ const DigitalResume2 = () => {
     projects = [],
   } = resumeData;
 
+  // Add this helper function before the return statement
+  const sortSkillCategories = (skills) => {
+    if (!skills) return [];
+
+    const skillsArray = Object.entries(skills);
+    const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+
+    // Keep track of original indices for custom categories
+    const customSkillsWithIndex = skillsArray
+      .map((entry, index) => ({ entry, index }))
+      .filter(({ entry: [category] }) => !defaultCategories.includes(category));
+
+    // Sort custom skills based on their original order
+    const sortedCustomSkills = customSkillsWithIndex
+      .sort((a, b) => a.index - b.index)
+      .map(({ entry }) => entry);
+
+    // Technical skills remain the same
+    const technicalSkills = skillsArray.filter(([category]) =>
+      defaultCategories.includes(category)
+    );
+
+    // Return with technical skills first, followed by custom categories in original order
+    return [...technicalSkills, ...sortedCustomSkills];
+  };
+
   return (
     <div className="min-h-screen max-w-[794px] mx-auto flex justify-center py-10">
       <div className="bg-white shadow-lg rounded-lg p-8 max-w-4xl w-full">
-        {/* Header Section */}
-        <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800">
-            {personalDetails.firstName} {personalDetails.lastName}
-          </h1>
-          <p className="text-lg text-purple-600">{personalDetails.jobTitle}</p>
-          <p className="mt-4 text-gray-600">{personalDetails.summary}</p>
-        </header>
+        {/* Header Section - only display if there's header info */}
+        {hasHeaderInfo(personalDetails) && (
+          <header className="text-center mb-8">
+            {(personalDetails.firstName || personalDetails.lastName) && (
+              <h1 className="text-4xl font-bold text-gray-800">
+                {personalDetails.firstName} {personalDetails.lastName}
+              </h1>
+            )}
+            {personalDetails.jobTitle && (
+              <p className="text-lg text-purple-600 mt-[5px]">
+                {personalDetails.jobTitle}
+              </p>
+            )}
+            {personalDetails.summary && (
+              <p className="mt-4 text-gray-600">{personalDetails.summary}</p>
+            )}
+          </header>
+        )}
 
-        {/* Contact Section */}
-        <section className="flex justify-around bg-gray-600 py-3 rounded-lg mb-4 mt-[-10px]">
-          <div className="flex items-center space-x-2 text-white">
-            <FontAwesomeIcon icon={faEnvelope} />
-            <span>{personalDetails.email || "N/A"}</span>
-          </div>
-          <div className="flex items-center space-x-2 text-white">
-            <FontAwesomeIcon icon={faPhone} />
-            <span>{personalDetails.phone || "N/A"}</span>
-          </div>
-          <div className="flex items-center space-x-2 text-white">
-            <FontAwesomeIcon icon={faMapMarkerAlt} />
-            <span>{personalDetails.address || "N/A"}</span>
-          </div>
-          <div className="flex items-center space-x-2 text-white">
-            <FontAwesomeIcon icon={faLinkedin} />
-            <a
+        {/* Contact Section - only display if there's contact info */}
+        {hasContactInfo(personalDetails) && (
+          <section className="flex justify-around bg-gray-600 py-3 rounded-lg mb-4 mt-[-15px] flex-wrap gap-4">
+            <ContactItem 
+              icon={faEnvelope} 
+              value={personalDetails.email}
+            />
+            <ContactItem 
+              icon={faPhone} 
+              value={personalDetails.phone}
+            />
+            <ContactItem 
+              icon={faMapMarkerAlt} 
+              value={personalDetails.address}
+            />
+            <ContactItem 
+              icon={faLinkedin} 
+              value={personalDetails.linkedin}
               href={personalDetails.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              LinkedIn
-            </a>
-          </div>
-          <div className="flex items-center space-x-2 text-white">
-            {/* Additional Links */}
-            <ul className="list-none">
-              {personalDetails.otherLinks && personalDetails.otherLinks.map((link, index) => (
-                <li key={index}>
-                  <FontAwesomeIcon
-                    icon={faLink}
-                    className="space-x-2 text-white mr-2"
-                  />
-                  <a
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {link.title}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+              label="LinkedIn"
+            />
+            <ContactItem 
+              icon={faGithub} 
+              value={personalDetails.github}
+              href={personalDetails.github}
+              label="GitHub"
+            />
+            {personalDetails.otherLinks?.map((link, index) => (
+              link.url && link.title && (
+                <ContactItem 
+                  key={index}
+                  icon={faLink} 
+                  value={link.url}
+                  href={link.url}
+                  label={link.title}
+                />
+              )
+            ))}
+          </section>
+        )}
 
         {/* Objective Section */}
         {hasObjective() && (
@@ -335,36 +422,41 @@ const DigitalResume2 = () => {
           </section>
         )}
 
-{/* Skills Section */}
-{hasSkills() && (
+        {/* Skills Section */}
+        {hasSkills() && (
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-gray-800 mt-6">Skills</h2>
-            {Object.entries(resumeData.skills).map(([category, skillList], index) => (
-              skillList && skillList.length > 0 && (
+            {sortSkillCategories(resumeData.skills).map(([category, skillList], index) => {
+              const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+              const isDefaultCategory = defaultCategories.includes(category);
+
+              return skillList && skillList.length > 0 && (
                 <div key={index} className="mt-4">
                   <h3 className="font-bold mb-2">
-                    {category.trim().toLocaleLowerCase() === "full stack" ? "Technical Skills" : category}
+                    {isDefaultCategory ? "Technical Skills" : category}
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {skillList.map((skill, idx) => (
-                      <span
-                        key={idx}
-                        className="bg-teal-100 text-teal-600 rounded-full px-4 py-2 text-sm font-medium"
-                      >
-                        {skill}
-                      </span>
+                      skill && skill.trim() !== "" && (
+                        <span
+                          key={idx}
+                          className="bg-teal-100 text-teal-600 rounded-full px-4 py-2 text-sm font-medium"
+                        >
+                          {skill}
+                        </span>
+                      )
                     ))}
                   </div>
                 </div>
-              )
-            ))}
+              );
+            })}
           </section>
         )}
 
         {/* Work Experience Section */}
         {hasWorkExperience() && (
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Work Experience</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-1">Work Experience</h2>
             {resumeData.workExperience.map((experience, index) => (
               <div key={index} className="mb-6">
                 <div>
@@ -373,9 +465,12 @@ const DigitalResume2 = () => {
                       {experience.company} - {experience.city}
                     </h3>
                     <p className="text-right text-sm text-gray-900">
-                      ({experience.startDate} - {experience.endDate || "Present"})
+                    {experience.startDate}
+                  {experience.startDate && experience.endDate && " - "}
+                  {experience.endDate}
                     </p>
                   </div>
+                  <p className="text-gray-600 italic">{experience.jobTitle}</p>
                   <ul className="list-disc list-inside text-gray-600">
                     {parseDescription(experience.description).map((desc, i) => (
                       <li key={i}>{desc}</li>
@@ -390,7 +485,7 @@ const DigitalResume2 = () => {
         {/* Projects Section */}
         {hasProjects() && (
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Personal Projects</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-1">Personal Projects</h2>
             {resumeData.projects.map((project, index) => (
               <div key={index} className="mb-6">
                 <div>
@@ -422,7 +517,7 @@ const DigitalResume2 = () => {
         {/* Education Section */}
         {hasEducation() && (
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Education</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-1">Education</h2>
             {resumeData.education.map((edu, index) => (
               <div key={index} className="flex justify-between items-start mb-6">
                 <div>
@@ -432,7 +527,9 @@ const DigitalResume2 = () => {
                   <p className="text-sm text-gray-500">{edu.university}, {edu.city}</p>
                 </div>
                 <p className="text-right text-sm text-gray-900">
-                  ({edu.startDate} - {edu.endDate})
+                {edu.startDate}
+                  {edu.startDate && edu.endDate && " - "}
+                  {edu.endDate}
                 </p>
               </div>
             ))}

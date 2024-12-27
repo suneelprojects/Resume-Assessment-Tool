@@ -66,8 +66,6 @@ const ProfessionalResume2 = () => {
         isSuccess: true,
         error: null
       });
-
-      console.log("Resume saved successfully!");
     } catch (error) {
       console.error("Error saving resume:", error);
       setSaveStatus({
@@ -235,13 +233,12 @@ const ProfessionalResume2 = () => {
 
   // Render individual page with dynamic content overflow
   const ResumePage = ({ children, className = "" }) => (
-    <div className={`w-[210mm] min-h-[297mm] h-fit bg-white shadow-lg mx-auto transform origin-top scale-100 sm:scale-[0.7] md:scale-[0.85] lg:scale-100 mb-4 ${className}`}>
+    <div className={`w-full lg:w-[210mm] min-h-[297mm] h-fit bg-white shadow-lg mx-auto transform origin-top scale-[0.7] sm:scale-[0.8] md:scale-[0.85] lg:scale-100 mb-4 ${className}`}>
       <div className="p-8 w-full h-full">
         {children}
       </div>
     </div>
   );
-
   // Loading state
   if (loading) {
     return <LoadingSpinner />;
@@ -270,6 +267,27 @@ const ProfessionalResume2 = () => {
 
   const parsedAchievements = parseAchievements(achievements);
 
+  // Add this helper function near the top of your component, with other helper functions
+  const sortSkillCategories = (skills) => {
+    if (!skills) return [];
+
+    const skillsArray = Object.entries(skills);
+    const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+
+    // Separate technical skills (default categories) and custom categories
+    const technicalSkills = skillsArray.filter(([category]) =>
+      defaultCategories.includes(category)
+    );
+
+    // Get remaining categories in their original order
+    const customSkills = skillsArray.filter(([category]) =>
+      !defaultCategories.includes(category)
+    );
+
+    // Return with technical skills first, followed by custom categories
+    return [...technicalSkills, ...customSkills];
+  };
+
   // Dynamically render pages
   const RenderResume = () => {
     // Array to hold pages of content
@@ -285,30 +303,43 @@ const ProfessionalResume2 = () => {
     addContent(
       <header key="header" className="text-center mb-4">
         <h1 className="text-3xl font-bold text-green-700 mb-2">
-          {personalDetails.firstName} {personalDetails.lastName}
+          {personalDetails.firstName && personalDetails.lastName &&
+            `${personalDetails.firstName} ${personalDetails.lastName}`
+          }
         </h1>
         <p>
-          {personalDetails.address || 'Thorrur'} | {personalDetails.phone || '9063495488'} | {" "}
-          <a href={`mailto:${personalDetails.email}`}>{personalDetails.email || 'pasha@gmail.com'}</a> |{" "}
+          {personalDetails.address && (
+            <>{personalDetails.address}</>
+          )}
+          {personalDetails.phone && (
+            <>{personalDetails.address ? ' | ' : ''}{personalDetails.phone}</>
+          )}
+          {personalDetails.email && (
+            <>{(personalDetails.address || personalDetails.phone) ? ' | ' : ''}
+              <a href={`mailto:${personalDetails.email}`}>{personalDetails.email}</a>
+            </>
+          )}
           {personalDetails.linkedin && (
-            <a
-              href={personalDetails.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              LinkedIn
-            </a>
-          )} 
+            <>{(personalDetails.address || personalDetails.phone || personalDetails.email) ? ' | ' : ''}
+              <a href={personalDetails.linkedin} target="_blank" rel="noopener noreferrer">
+                {personalDetails.linkedin}
+              </a>
+            </>
+          )}
+          {personalDetails.github && (
+            <>{(personalDetails.address || personalDetails.phone || personalDetails.email || personalDetails.linkedin) ? ' | ' : ''}
+              <a href={personalDetails.github} target="_blank" rel="noopener noreferrer">
+                {personalDetails.github}
+              </a>
+            </>
+          )}
           {personalDetails.otherLinks && personalDetails.otherLinks.map((link, index) => (
             <React.Fragment key={index}>
-              <a
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                |{" "} {link.title}
+              {(personalDetails.address || personalDetails.phone || personalDetails.email ||
+                personalDetails.linkedin || personalDetails.github || index > 0) ? ' | ' : ''}
+              <a href={link.url} target="_blank" rel="noopener noreferrer">
+                {link.url}
               </a>
-              {index < personalDetails.otherLinks.length - 1 && " | "}
             </React.Fragment>
           ))}
         </p>
@@ -342,9 +373,10 @@ const ProfessionalResume2 = () => {
                     {experience.company || "Company name not provided"}, {experience.city || "Location not provided"}
                   </h3>
                   <p className="text-gray-500 text-sm">
-                    {experience.startDate || "Start date not provided"} –{" "}
-                    {experience.endDate || "End date not provided"}
-                  </p>
+  {experience.startDate}
+  {experience.startDate && experience.endDate ? " – " : ""}
+  {experience.endDate}
+</p>
                 </div>
                 <p className="text-gray-600 italic">
                   {experience.jobTitle || "Role not provided"}
@@ -378,7 +410,9 @@ const ProfessionalResume2 = () => {
                     {edu.major || "Field not provided"}
                   </h3>
                   <p className="text-gray-500 text-sm">
-                    {edu.startDate} - {edu.endDate}
+                  {edu.startDate}
+                  {edu.startDate && edu.endDate && " - "}
+                  {edu.endDate}
                   </p>
                 </div>
                 <p className="text-gray-600 italic">
@@ -397,20 +431,23 @@ const ProfessionalResume2 = () => {
             <h2 className="text-xl font-semibold text-green-700 border-b border-green-700 mb-2">
               SKILLS
             </h2>
-            {Object.entries(skills).map(([category, items], index) => (
-              <div key={index} className="mt-4">
-                <h3 className="font-bold text-gray-700">
-                  {category.trim().toLocaleLowerCase() === "full stack"
-                    ? "Technical Skills"
-                    : category}
-                </h3>
-                <p className="mt-2 text-gray-600">
-                  {Array.isArray(items) && items.length > 0
-                    ? items.join(", ")
-                    : "No skills provided under this category."}
-                </p>
-              </div>
-            ))}
+            {sortSkillCategories(skills).map(([category, items], index) => {
+              const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+              const isDefaultCategory = defaultCategories.includes(category);
+
+              return items && items.length > 0 && (
+                <div key={index} className="mt-4">
+                  <h3 className="font-bold text-gray-700">
+                    {isDefaultCategory ? "Technical Skills" : category}
+                  </h3>
+                  <p className="mt-2 text-gray-600">
+                    {Array.isArray(items) && items.length > 0
+                      ? items.join(", ")
+                      : "No skills provided under this category."}
+                  </p>
+                </div>
+              );
+            })}
           </section>
         ) : null
       },

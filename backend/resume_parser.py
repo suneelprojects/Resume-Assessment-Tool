@@ -6,6 +6,7 @@ import logging
 import multiprocessing as mp
 from collections import OrderedDict
 from pdfminer.high_level import extract_text
+from docx import Document
 
 # Setup logging for better debugging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -22,13 +23,18 @@ class ResumeParser:
         self._extract_basic_details()
 
     def extract_resume_text(self, file_path):
-        """Extract text from PDF resume file using pdfminer."""
+        """Extract text from PDF or DOCX resume file."""
         try:
-            return extract_text(file_path)
+            if file_path.endswith('.pdf'):
+                return extract_text(file_path)  # PDF handling
+            elif file_path.endswith('.docx'):
+                doc = Document(file_path)  # DOCX handling
+                return '\n'.join([paragraph.text for paragraph in doc.paragraphs])
+            else:
+                raise ValueError("Unsupported file format. Only PDF and DOCX are supported.")
         except Exception as e:
             logging.error(f"Error extracting text from {file_path}: {e}")
             return ""
-
     def preprocess_text(self, text):
         """Preprocess text to clean unnecessary whitespaces and line breaks."""
         text = ' '.join(text.split())  # Normalize white space

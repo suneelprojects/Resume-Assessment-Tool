@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../services/firebaseConfig';
 import { Eye, EyeOff } from 'lucide-react';
+import { createUserDocument } from '../services/firebaseUtils';
 
 const Signup = () => {
   const [username, setUsername] = useState('');
@@ -20,27 +21,47 @@ const Signup = () => {
 
   const handleSignup = async (e) => {
     e.preventDefault();
-
-    // Reset previous error messages
-    setError('');
-    setEmailError('');
-    setPasswordError('');
-    setConfirmPasswordError('');
-
-    if (!termsAccepted) {
-      setError('You must accept the Terms of Service and Privacy Policy to proceed.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setConfirmPasswordError('Passwords do not match.');
-      return;
-    }
-
+    console.log("Starting signup process..."); // Debug log
+  
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      navigate('/login');
+      // Basic validation
+      if (!termsAccepted) {
+        setError('You must accept the Terms of Service and Privacy Policy to proceed.');
+        return;
+      }
+  
+      if (!username || !email || !password || !confirmPassword) {
+        setError('All fields are required');
+        return;
+      }
+  
+      if (password !== confirmPassword) {
+        setConfirmPasswordError('Passwords do not match.');
+        return;
+      }
+  
+      // First create the user in Firebase Auth
+      console.log("Creating user authentication..."); // Debug log
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      console.log("User authenticated successfully:", userCredential.user.uid); // Debug log
+  
+      // Then create the user document in Firestore
+      console.log("Creating user document..."); // Debug log
+      await createUserDocument(userCredential.user, {
+        displayName: username,
+      });
+      console.log("User document created successfully"); // Debug log
+  
+      // Show success message
+      alert("Account created successfully! Please log in.");
+      
+      // Navigate to login page
+      navigate('/login', { replace: true });
+  
     } catch (error) {
+      console.error("Signup error:", error); // Debug log
+  
+      // Handle specific error cases
       switch (error.code) {
         case 'auth/invalid-email':
           setEmailError('Please enter a valid email address.');
@@ -55,7 +76,7 @@ const Signup = () => {
           setError('Email/password sign-up is currently disabled.');
           break;
         default:
-          setError('An unexpected error occurred. Please try again.');
+          setError(`Registration failed: ${error.message}`);
       }
     }
   };

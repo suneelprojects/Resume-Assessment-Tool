@@ -278,14 +278,52 @@ export const DOCXDownload = ({ resumeData, template, onClose }) => {
   };
 
   const buildContactLine = (personalDetails) => {
-    const contactParts = [
-      personalDetails.address || 'Location not provided',
-      personalDetails.phone || 'Phone not provided',
-      personalDetails.email || 'Email not provided',
-      personalDetails.linkedin ? 'LinkedIn' : '',
-      personalDetails.github ? 'GitHub' : ''
-    ].filter(Boolean);
-
+    const contactParts = [];
+    
+    // Add address if available
+    if (personalDetails.address?.trim()) {
+      contactParts.push(personalDetails.address);
+    }
+  
+    // Add phone if available
+    if (personalDetails.phone?.trim()) {
+      contactParts.push(personalDetails.phone);
+    }
+  
+    // Add email if available
+    if (personalDetails.email?.trim()) {
+      contactParts.push(personalDetails.email);
+    }
+  
+    // Add LinkedIn URL without http/https and www
+    if (personalDetails.linkedin?.trim()) {
+      const cleanUrl = personalDetails.linkedin
+        .replace(/^https?:\/\/(www\.)?/, '')
+        .replace(/\/$/, '');
+      contactParts.push(cleanUrl);
+    }
+  
+    // Add GitHub URL without http/https and www
+    if (personalDetails.github?.trim()) {
+      const cleanUrl = personalDetails.github
+        .replace(/^https?:\/\/(www\.)?/, '')
+        .replace(/\/$/, '');
+      contactParts.push(cleanUrl);
+    }
+  
+    // Add other links if available
+    if (personalDetails.otherLinks?.length > 0) {
+      personalDetails.otherLinks.forEach(link => {
+        if (link.url?.trim()) {
+          const cleanUrl = link.url
+            .replace(/^https?:\/\/(www\.)?/, '')
+            .replace(/\/$/, '');
+          contactParts.push(cleanUrl);
+        }
+      });
+    }
+  
+    // Join all parts with bullet points
     return contactParts.join(' • ');
   };
 
@@ -310,7 +348,7 @@ export const DOCXDownload = ({ resumeData, template, onClose }) => {
             color: '000000'
           }),
           new TextRun({
-            text: `${exp.startDate || 'Start date not provided'} – ${exp.endDate || 'End date not provided'}`,
+            text: `${exp.startDate}${exp.startDate && exp.endDate ? " - " : ""}${exp.endDate}`,
             size: 22,
             color: '666666',
             italics: true
@@ -424,7 +462,7 @@ export const DOCXDownload = ({ resumeData, template, onClose }) => {
             color: '000000'
           }),
           new TextRun({
-            text: `${edu.startDate || 'Start date not provided'} - ${edu.endDate || 'End date not provided'}`,
+            text: `\t${edu.startDate}${edu.startDate && edu.endDate ? " - " : ""}${edu.endDate}`,
             size: 22,
             color: '666666',
             italics: true
@@ -455,25 +493,61 @@ export const DOCXDownload = ({ resumeData, template, onClose }) => {
     if (!skills || Object.keys(skills).length === 0) {
       return [new Paragraph({ children: [new TextRun({ text: 'No skills provided.', size: 22 })] })];
     }
-
-    return Object.entries(skills).reverse().map(([category, items]) => 
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: category.trim().toLowerCase() === 'full stack' ? 'Technical Skills' : category,
-            bold: true,
-            size: 22,
-            color: '000000'
-          }),
-          new TextRun({
-            text: `: ${Array.isArray(items) && items.length > 0 ? items.join(', ') : 'No skills provided under this category.'}`,
-            size: 22,
-            color: '666666'
-          })
-        ],
-        spacing: { before: 100 }
+  
+    // Sort skill categories - identical to ProfessionalResume1
+    const sortSkillCategories = (skills) => {
+      if (!skills) return [];
+  
+      const skillsArray = Object.entries(skills);
+      const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+  
+      // Separate technical skills (default categories) and custom categories
+      const technicalSkills = skillsArray.filter(([category]) =>
+        defaultCategories.includes(category)
+      );
+  
+      const customSkills = skillsArray.filter(([category]) =>
+        !defaultCategories.includes(category)
+      );
+  
+      // Return with technical skills first, followed by custom categories
+      return [...technicalSkills, ...customSkills];
+    };
+  
+    // Using the same logic as ProfessionalResume1
+    const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+    
+    return sortSkillCategories(skills)
+      .filter(([_, items]) => {
+        return Array.isArray(items) && items.some(item => item && item.trim() !== '');
       })
-    );
+      .flatMap(([category, items]) => {
+        const isDefaultCategory = defaultCategories.includes(category);
+        
+        return [
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: isDefaultCategory ? "Technical Skills" : category,
+                bold: true,
+                size: 22,
+                color: '000000'
+              })
+            ],
+            spacing: { before: 100, after: 100 }
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: items.filter(item => item && item.trim() !== '').join(', '),
+                size: 22,
+                color: '666666'
+              })
+            ],
+            spacing: { after: 200 }
+          })
+        ];
+      });
   };
 
   const createAchievementsEntries = (achievements) => {

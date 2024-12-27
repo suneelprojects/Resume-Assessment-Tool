@@ -195,7 +195,8 @@ export const PR2PDFDownload = ({ resumeData, template, onClose }) => {
     bulletPoint: {
       fontSize: 11,
       marginLeft: 10,
-      marginBottom: 2
+      marginBottom: 2,
+      color: '#666666',
     },
     skillCategory: {
       fontSize: 12,
@@ -208,21 +209,54 @@ export const PR2PDFDownload = ({ resumeData, template, onClose }) => {
     }
   });
 
+  // Helper function to sort skills categories
+  const sortSkillCategories = (skills) => {
+    if (!skills) return [];
+
+    const skillsArray = Object.entries(skills);
+    const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+
+    // Separate technical skills (default categories) and custom categories
+    const technicalSkills = skillsArray.filter(([category]) =>
+        defaultCategories.includes(category)
+    );
+
+    const customSkills = skillsArray.filter(([category]) =>
+        !defaultCategories.includes(category)
+    );
+
+    // Return with technical skills first, followed by custom categories
+    return [...technicalSkills, ...customSkills];
+};
+
   // PDF Document Component with validations
   const ResumePDF = () => (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header is always shown */}
-        <View style={styles.header}>
-          <Text style={styles.fullName}>
-            {resumeData.personalDetails.firstName} {resumeData.personalDetails.lastName}
-          </Text>
-          <Text style={styles.contactInfo}>
-            {resumeData.personalDetails.address} | {resumeData.personalDetails.phone} | {resumeData.personalDetails.email}
-            {resumeData.personalDetails.linkedin && ' | LinkedIn'}
-            {resumeData.personalDetails.otherLinks?.map(link => ` | ${link.title}`)}
-          </Text>
-        </View>
+       {/* Header Section */}
+<View style={styles.header}>
+  {resumeData.personalDetails.firstName && resumeData.personalDetails.lastName && (
+    <Text style={styles.fullName}>
+      {`${resumeData.personalDetails.firstName} ${resumeData.personalDetails.lastName}`}
+    </Text>
+  )}
+  <Text style={styles.contactInfo}>
+    {[
+      resumeData.personalDetails.address,
+      resumeData.personalDetails.phone,
+      resumeData.personalDetails.email,
+      resumeData.personalDetails.linkedin,
+      resumeData.personalDetails.github,
+      ...(resumeData.personalDetails.otherLinks?.map(link => link.url) || [])
+    ]
+      .filter(Boolean)
+      .map((item, index, array) => {
+        const isLink = item.startsWith('http') || item.includes('@');
+        const displayText = isLink ? item : item;
+        return index === array.length - 1 ? displayText : `${displayText} | `;
+      })}
+  </Text>
+</View>
 
         {/* Objective Section */}
         {hasObjective() && (
@@ -243,7 +277,9 @@ export const PR2PDFDownload = ({ resumeData, template, onClose }) => {
                     {experience.company}, {experience.city}
                   </Text>
                   <Text style={styles.dateText}>
-                    {experience.startDate} – {experience.endDate}
+                  {experience.startDate}
+                                                {experience.startDate && experience.endDate && " - "}
+                                                {experience.endDate}
                   </Text>
                 </View>
                 <Text style={styles.jobTitle}>{experience.jobTitle}</Text>
@@ -266,7 +302,9 @@ export const PR2PDFDownload = ({ resumeData, template, onClose }) => {
                     {edu.degree} in {edu.major}
                   </Text>
                   <Text style={styles.dateText}>
-                    {edu.startDate} - {edu.endDate}
+                  {edu.startDate}
+                                        {edu.startDate && edu.endDate && " - "}
+                                        {edu.endDate}
                   </Text>
                 </View>
                 <Text style={styles.jobTitle}>
@@ -279,20 +317,25 @@ export const PR2PDFDownload = ({ resumeData, template, onClose }) => {
 
         {/* Skills Section */}
         {hasSkills() && (
-          <View style={styles.sectionContent}>
-            <Text style={styles.sectionTitle}>SKILLS</Text>
-            {Object.entries(resumeData.skills || {}).map(([category, items], index) => (
-              <View key={index} style={{ marginBottom: 5 }}>
-                <Text style={styles.skillCategory}>
-                  {category.trim().toLowerCase() === "full stack" ? "Technical Skills" : category}
-                </Text>
-                <Text style={styles.skillList}>
-                  {Array.isArray(items) ? items.join(", ") : "No skills provided"}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
+  <View style={styles.sectionContent}>
+    <Text style={styles.sectionTitle}>SKILLS</Text>
+    {sortSkillCategories(resumeData.skills || {}).map(([category, items], index) => {
+      const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+      const isDefaultCategory = defaultCategories.includes(category);
+
+      return (
+        <View key={index} style={{ marginBottom: 5 }}>
+          <Text style={styles.skillCategory}>
+            {isDefaultCategory ? "Technical Skills" : category}
+          </Text>
+          <Text style={styles.skillList}>
+            {Array.isArray(items) ? items.join(", ") : "No skills provided"}
+          </Text>
+        </View>
+      );
+    })}
+  </View>
+)}
 
         {/* Projects Section */}
         {hasProjects() && (

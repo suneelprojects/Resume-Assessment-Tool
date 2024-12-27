@@ -7,7 +7,7 @@ import tensorflow as tf
 from transformers import BertTokenizer, BertModel
 from collections import Counter
 import PyPDF2
-import docx
+from docx import Document
 
 class ResumeModel:
     def __init__(self):
@@ -19,7 +19,7 @@ class ResumeModel:
 
         # Load skills and education data dynamically
         self.hard_skills = self.load_skills_from_file(os.path.join(self.base_dir, "technical_skills_list.txt"))
-
+        self.soft_skills = self.load_skills_from_file(os.path.join(self.base_dir, "soft_skills_list.txt"))
         self.education_keywords = self.load_skills_from_file(os.path.join(self.base_dir, "academic_degrees_list.txt"))
 
         # Initialize BERT model and tokenizer
@@ -64,23 +64,27 @@ class ResumeModel:
                 return "".join([page.extract_text() for page in reader.pages])
         except Exception as e:
             return f"Error extracting text from PDF: {str(e)}"
-
     def extract_text_from_docx(self, file_path):
-        """Extract text from a DOCX file."""
+        from docx import Document
         try:
-            doc = docx.Document(file_path)
-            return "\n".join([para.text for para in doc.paragraphs])
+            doc = Document(file_path)
+            return '\n'.join([paragraph.text for paragraph in doc.paragraphs])
         except Exception as e:
-            return f"Error extracting text from DOCX: {str(e)}"
+            raise ValueError(f"Error extracting text from {file_path}: {str(e)}")
 
     def categorize_skills(self, text):
-        """Categorize skills into hard, soft, and other categories."""
-        skills = {"hard_skills": []}
+        """Categorize skills into hard, soft, and other categories dynamically."""
+        skills = {"hard_skills": [], "soft_skills": []}
 
-        for category, skills_list in [("hard_skills", self.hard_skills)]:
-            for skill in skills_list:
-                if re.search(r'\b' + re.escape(skill) + r'\b', text, re.IGNORECASE):
-                    skills[category].append(skill)
+        # Match hard skills
+        for skill in self.hard_skills:
+            if re.search(r'\b' + re.escape(skill) + r'\b', text, re.IGNORECASE):
+                skills["hard_skills"].append(skill)
+
+        # Match soft skills
+        for skill in self.soft_skills:
+            if re.search(r'\b' + re.escape(skill) + r'\b', text, re.IGNORECASE):
+                skills["soft_skills"].append(skill)
 
         return skills
 
@@ -99,13 +103,20 @@ class ResumeModel:
     def calculate_ats_score(self, resume_text, required_skills):
         """Calculate ATS-friendly score."""
         # Section Presence Check
-        essential_sections = ["Contact", "Education", "Skills", "Work Experience"]
+        essential_sections = [
+        "Contact", 
+        "Education", 
+        "Skills", 
+        "Work Experience", 
+        "Projects", 
+        "Summary"
+        ];        
         sections_found = [section for section in essential_sections if section.lower() in resume_text.lower()]
         section_score = len(sections_found) / len(essential_sections) * 100
 
         # Skill Matching
         extracted_skills = self.categorize_skills(resume_text)["hard_skills"]
-        matched_skills = [skill for skill in required_skills if skill in extracted_skills]
+        matched_skills = [skill for skill in required_skills if skill.lower() in map(str.lower, extracted_skills)]
         skill_score = len(matched_skills) / len(required_skills) * 100 if required_skills else 0
 
         # Formatting Check
@@ -121,7 +132,6 @@ class ResumeModel:
         # Overall ATS Score
         ats_score = (skill_score * 0.6) + (section_score * 0.3) + (formatting_score * 0.1)
         return ats_score, skill_score, section_score, formatting_score
-
 
     def hugging_face_recommendation_bert(self, resume_text, job_description):
         """Use BERT for semantic similarity and skill recommendation."""
@@ -152,6 +162,7 @@ class ResumeModel:
             recommendation += f"\nHowever, you may want to consider adding the following skills to your resume: {', '.join(missing_skills)}"
 
         return similarity_score, recommendation
+
     def predict_role(self, resume_text, input_role):
         """
         Predict the role based on the resume text and provide suggestions for improvement.
@@ -181,7 +192,7 @@ class ResumeModel:
         required_skills = self.role_skills.get(input_role, [])
 
         # Find missing skills
-        missing_skills = [skill for skill in required_skills if skill not in resume_skills]
+        missing_skills = [skill for skill in required_skills if skill.lower() not in map(str.lower, resume_skills)]
 
         # Calculate ATS-friendly score
         ats_score, skill_score, section_score, formatting_score = self.calculate_ats_score(
@@ -198,13 +209,13 @@ class ResumeModel:
             "formatting_score": formatting_score,
             "suggested_roles": [
                 {"role": role, "confidence": confidence}
-                for role, confidence in zip(suggested_roles[:20], suggested_confidences[:20])  # Top 5 roles
+                for role, confidence in zip(suggested_roles[:20], suggested_confidences[:20])  # Top 20 roles
             ],
             "resume_skills": resume_skills,
             "missing_skills": missing_skills,
         }
 
-        # Print results for easier debugging or viewing
+        # Print results for debugging
         print(f"Role Confidence for '{input_role}': {input_role_confidence:.2f}%")
         print(f"ATS-Friendly Score: {ats_score:.2f}%")
         print(f"  - Skill Match Score: {skill_score:.2f}%")

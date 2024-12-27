@@ -6,6 +6,7 @@ import { useStep } from "../hooks/StepContext";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../services/firebaseConfig";
 import { saveEducationDetails, fetchEducationDetails } from "../services/firebaseUtils";
+import MonthYearPicker from "../common/MonthYearPicker";
 
 const Education = () => {
   const navigate = useNavigate();
@@ -94,9 +95,19 @@ const Education = () => {
     const form = event.target;
 
     // Custom validation to check end date is not before start date
-    const isDateValid = educationEntries.every(entry => 
-      !entry.startDate || !entry.endDate || entry.endDate >= entry.startDate
-    );
+    const isDateValid = educationEntries.every(entry => {
+      if (!entry.startDate || !entry.endDate || entry.endDate === "Present") {
+        return true;
+      }
+
+      const [startMonth, startYear] = entry.startDate.split(", ");
+      const [endMonth, endYear] = entry.endDate.split(", ");
+      
+      const startDate = new Date(`${startMonth} 1, ${startYear}`);
+      const endDate = new Date(`${endMonth} 1, ${endYear}`);
+      
+      return endDate >= startDate;
+    });
 
     if (!isDateValid) {
       toast.error("End date cannot be before start date!", {
@@ -290,27 +301,24 @@ const Education = () => {
                   <label className="block text-sm font-medium text-gray-700">
                     Start Date
                   </label>
-                  <input
-                    type="month"
-                    className="mt-1 p-3 border border-gray-300 rounded-lg w-full bg-white/70 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 hover:bg-white/90"
+                  <MonthYearPicker
                     value={entry.startDate}
-                    onChange={(e) =>
-                      handleInputChange(index, "startDate", e.target.value)
-                    }
+                    onChange={(value) => handleInputChange(index, "startDate", value)}
+                    yearsBack={50}
+                    isEndDate={false}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     End Date
                   </label>
-                  <input
-                    type="month"
-                    min={entry.startDate}
-                    className="mt-1 p-3 border border-gray-300 rounded-lg w-full bg-white/70 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 hover:bg-white/90"
+                  <MonthYearPicker
                     value={entry.endDate}
-                    onChange={(e) =>
-                      handleInputChange(index, "endDate", e.target.value)
-                    }
+                    onChange={(value) => handleInputChange(index, "endDate", value)}
+                    min={entry.startDate}
+                    yearsBack={50}
+                    isEndDate={true}
+                    allowPresent={true}
                   />
                 </div>
               </div>

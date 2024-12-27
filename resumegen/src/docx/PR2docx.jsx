@@ -129,7 +129,7 @@ const createWorkExperienceEntries = (workExperience) => {
           color: '000000'
         }),
         new TextRun({
-          text: `${exp.startDate || "Start date not provided"} – ${exp.endDate || "End date not provided"}`,
+          text: `${exp.startDate}${exp.startDate && exp.endDate ? " - " : ""}${exp.endDate}`,
           size: 22,
           color: '666666'
         })
@@ -173,7 +173,7 @@ const createEducationEntries = (education) => {
           color: '000000'
         }),
         new TextRun({
-          text: `${edu.startDate} - ${edu.endDate}`,
+          text: `${edu.startDate}${edu.startDate && edu.endDate ? " - " : ""}${edu.endDate}`,
           size: 22,
           color: '666666'
         })
@@ -195,34 +195,61 @@ const createEducationEntries = (education) => {
   ]);
 };
 
+// Add new sortSkillCategories function
+const sortSkillCategories = (skills) => {
+  if (!skills) return [];
+
+  const skillsArray = Object.entries(skills);
+  const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+
+  // Separate technical skills (default categories) and custom categories
+  const technicalSkills = skillsArray.filter(([category]) =>
+    defaultCategories.includes(category)
+  );
+
+  // Get remaining categories in their original order
+  const customSkills = skillsArray.filter(([category]) =>
+    !defaultCategories.includes(category)
+  );
+
+  // Return with technical skills first, followed by custom categories
+  return [...technicalSkills, ...customSkills];
+};
+
 const createSkillsEntries = (skills) => {
   if (!hasSkills(skills)) {
     return [];
   }
 
-  return Object.entries(skills).flatMap(([category, items]) => [
-    new Paragraph({
-      children: [
-        new TextRun({
-          text: category.trim().toLocaleLowerCase() === "full stack" ? "Technical Skills" : category,
-          bold: true,
-          size: 24,
-          color: '000000'
-        })
-      ],
-      spacing: { before: 100 }
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({
-          text: Array.isArray(items) && items.length > 0 ? items.join(", ") : "No skills provided under this category.",
-          size: 22,
-          color: '666666'
-        })
-      ],
-      spacing: { before: 40 }
-    })
-  ]);
+  const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+
+  return sortSkillCategories(skills).flatMap(([category, items]) => {
+    const isDefaultCategory = defaultCategories.includes(category);
+    
+    return [
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: isDefaultCategory ? "Technical Skills" : category,
+            bold: true,
+            size: 24,
+            color: '000000'
+          })
+        ],
+        spacing: { before: 100 }
+      }),
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: Array.isArray(items) && items.length > 0 ? items.join(", ") : "No skills provided under this category.",
+            size: 22,
+            color: '666666'
+          })
+        ],
+        spacing: { before: 40 }
+      })
+    ];
+  });
 };
 
 const createProjectEntries = (projects) => {
@@ -275,15 +302,37 @@ const createAchievementsEntries = (achievements) => {
 };
 
 const buildContactLine = (personalDetails) => {
-  const contactParts = [
-    personalDetails.address || 'Thorrur',
-    personalDetails.phone || '9063495488',
-    personalDetails.email || 'pasha@gmail.com',
-    personalDetails.linkedin ? 'LinkedIn' : '',
-    ...(personalDetails.otherLinks?.map(link => link.title) || [])
-  ].filter(Boolean);
-
-  return contactParts.join(' | ');
+  const parts = [];
+  
+  if (personalDetails.address) {
+    parts.push(personalDetails.address);
+  }
+  
+  if (personalDetails.phone) {
+    parts.push(personalDetails.phone);
+  }
+  
+  if (personalDetails.email) {
+    parts.push(personalDetails.email);
+  }
+  
+  if (personalDetails.linkedin) {
+    parts.push(personalDetails.linkedin);
+  }
+  
+  if (personalDetails.github) {
+    parts.push(personalDetails.github);
+  }
+  
+  if (personalDetails.otherLinks && Array.isArray(personalDetails.otherLinks)) {
+    personalDetails.otherLinks.forEach(link => {
+      if (link.url) {
+        parts.push(link.url);
+      }
+    });
+  }
+  
+  return parts.filter(Boolean).join(' | ');
 };
 
 export const PR2DOCXDownload = ({ resumeData, template, onClose }) => {
@@ -312,32 +361,41 @@ export const PR2DOCXDownload = ({ resumeData, template, onClose }) => {
   const createDocxDocument = () => {
     const sections = [];
 
-    // Header (always included)
-    sections.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: `${resumeData.personalDetails.firstName} ${resumeData.personalDetails.lastName}`,
-            bold: true,
-            size: 32,
-            color: '15803d'
-          })
-        ],
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 100 }
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: buildContactLine(resumeData.personalDetails),
-            size: 22,
-            color: '666666'
-          })
-        ],
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 200 }
-      })
-    );
+    // Header (only include if personal details are available)
+    const { personalDetails } = resumeData;
+    if (personalDetails.firstName && personalDetails.lastName) {
+      sections.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `${personalDetails.firstName} ${personalDetails.lastName}`,
+              bold: true,
+              size: 32,
+              color: '15803d'
+            })
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 100 }
+        })
+      );
+    }
+
+    const contactLine = buildContactLine(personalDetails);
+    if (contactLine) {
+      sections.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: contactLine,
+              size: 22,
+              color: '666666'
+            })
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 200 }
+        })
+      );
+    }
 
     // Objective Section
     if (hasObjective(resumeData.objective)) {

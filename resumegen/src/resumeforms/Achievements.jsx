@@ -166,9 +166,16 @@ const Achievements = () => {
                 theme="snow"
                 placeholder="Describe your achievements, awards, and certificates"
                 className="custom-quill-editor"
+                modules={{
+                  toolbar: [
+                    [{ header: [1, 2, 3, false] }], // Headers
+                    ["bold", "italic", "underline", "strike", { list: "bullet" }], // Basic formatting
+                  ],
+                }}
                 style={{
-                  height: "200px",
-                  overflow: "hidden",
+                  backgroundColor: "rgba(255,255,255,0.7)",
+                  borderRadius: "0.5rem",
+                  border: "1px solid #D1D5DB",
                 }}
                 value={achievements}
                 onChange={(value) => setAchievements(value)}

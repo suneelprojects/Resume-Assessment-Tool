@@ -102,7 +102,7 @@ const Results = () => {
     useTable({ columns, data });
 
   return (
-    <div className="results-container p-8 bg-gray-50 min-h-screen">
+    <div className="results-container p-8 bg-gray-50 min-h-screen mt-[40px]">
       <h1 className="text-4xl font-bold text-center text-indigo-700 mb-8">
         Job Fit Analysis Dashboard
       </h1>

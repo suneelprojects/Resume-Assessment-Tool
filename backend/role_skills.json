@@ -116,5 +116,94 @@
         "Python", "Java", "Bash", "Ansible", "Chef", "Puppet", "Git", "Linux", "Windows",
         "Networking Protocols", "API Management", "Scaling Applications", "Disaster Recovery",
         "Monitoring Tools (Prometheus, Datadog, Grafana)", "Log Management", "Security Auditing"
+    ],
+    "AWS Admin": [
+        "AWS EC2", "S3", "IAM", "VPC", "CloudFormation", "AWS Lambda", "RDS", "DynamoDB",
+        "Route 53", "CloudFront", "CloudWatch", "Elastic Beanstalk", "Redshift", "ECS", "EKS",
+        "Auto Scaling", "Elastic Load Balancing", "AWS Systems Manager", "AWS CLI",
+        "Network Security", "VPN Configuration", "Firewall Management", "SSL/TLS", "IAM Policies",
+        "Identity and Access Management", "AWS Security Hub", "AWS Shield", "CloudTrail",
+        "Encryption", "Subnetting",
+        "CI/CD Pipelines", "Jenkins", "Git", "Ansible", "Terraform", "Kubernetes",
+        "Serverless Architecture", "AWS CodePipeline", "AWS CodeBuild", "AWS CodeDeploy",
+        "SQL", "PostgreSQL", "MySQL", "MongoDB", "AWS Glue", "AWS Aurora",
+        "Team Collaboration", "Problem Solving", "Critical Thinking", "Documentation",
+        "Docker", "Kubernetes", "Monitoring Tools", "Cost Optimization"
+    ],   "Junior DevOps Engineer": [
+        "CI/CD Pipelines", "Jenkins", "Git", "GitLab", "Docker", "Kubernetes", "Terraform",
+        "Ansible", "Chef", "Puppet", "Nagios", "Prometheus", "Grafana", "Splunk", "ELK Stack",
+        "Version Control", "Infrastructure as Code", "Monitoring and Logging",
+        "AWS", "Azure", "Google Cloud Platform", "AWS Lambda", "AWS CloudFormation",
+        "Azure DevOps", "Google Cloud Build", "AWS ECS", "AWS EKS",
+        "Python", "Shell Scripting", "Bash", "PowerShell", "Ruby", "Go", "Groovy",
+        "Networking Basics", "Firewall Configuration", "Load Balancing", "SSL/TLS",
+        "IAM", "Role-Based Access Control", "Secrets Management",
+        "PostgreSQL", "MySQL", "MongoDB", "Redis", "Amazon RDS", "DynamoDB",
+        "S3", "Block Storage",
+        "Team Collaboration", "Problem Solving", "Critical Thinking", "Adaptability",
+        "Documentation", "Agile Methodology"
+    ],    "Cloud Developer": [
+        "AWS", "Azure", "Google Cloud Platform", "Terraform", "Docker", "Kubernetes",
+        "AWS Lambda", "CloudFormation", "Azure DevOps", "Google Cloud Functions",
+        "Elastic Load Balancer", "AWS ECS", "AWS EKS", "Serverless Framework",
+        "Python", "JavaScript", "Node.js", "Java", "C#", "Go", "TypeScript",
+        "Flask", "FastAPI", "Django", "React", "Angular", "Vue.js",
+        "CI/CD Pipelines", "Jenkins", "Git", "Ansible", "Nagios", "Prometheus",
+        "Grafana", "CloudWatch", "Azure Monitor", "Google Cloud Monitoring",
+        "Amazon RDS", "DynamoDB", "BigQuery", "Snowflake", "PostgreSQL", "MySQL",
+        "MongoDB", "Redis", "Firebase", "S3", "Data Warehousing",
+        "Team Collaboration", "Critical Thinking", "Problem Solving",
+        "Adaptability", "Documentation", "Agile Methodology"
+    ],  "Java Full Stack Developer": [
+        "Java", "Spring Boot", "Hibernate", "REST APIs", "Microservices", "JPA", "Maven",
+        "Thymeleaf", "JSP", "JDBC", "JSON", "TypeScript", "JavaScript", "Node.js",
+        "React.js", "Angular", "Vue.js", "Bootstrap", "HTML", "CSS",
+        "SQL", "MySQL", "PostgreSQL", "MongoDB", "Redis", "Elasticsearch",
+        "Git", "Jenkins", "Docker", "Kubernetes", "CI/CD Pipelines", "Agile Development",
+        "JUnit", "Mockito", "Oracle Database"
+    ],
+    "Python Full Stack Developer": [
+        "Python", "Django", "Flask", "FastAPI", "NumPy", "Pandas", "SQLAlchemy",
+        "REST APIs", "GraphQL", "TypeScript", "JavaScript", "Node.js", "React.js",
+        "Angular", "Vue.js", "Bootstrap", "HTML", "CSS", "Tailwind CSS", "PostgreSQL",
+        "MySQL", "MongoDB", "Redis", "Elasticsearch", "Git", "Jenkins", "Docker",
+        "CI/CD Pipelines", "Agile Development", "BeautifulSoup", "Pytest"
+    ],
+    "Frontend Developer": [
+        "HTML", "CSS", "JavaScript", "TypeScript", "React.js", "Angular", "Vue.js",
+        "Bootstrap", "Tailwind CSS", "SASS", "LESS", "Material-UI", "Chakra UI", "jQuery",
+        "Webpack", "Babel", "Responsive Design", "SEO Best Practices",
+        "Jest", "Cypress", "Figma", "Adobe XD", "Sketch"
+    ],
+    "Backend Developer": [
+        "Python", "Java", "Node.js", "Ruby", "PHP", "Go", "Spring Boot", "Hibernate",
+        "Django", "Flask", "Express.js", "REST APIs", "GraphQL", "SQL", "PostgreSQL",
+        "MySQL", "MongoDB", "Redis", "Elasticsearch", "Git", "Jenkins", "Docker",
+        "CI/CD Pipelines", "Apache Kafka", "Spring Security", "JWT Authentication"
+    ],
+    "React.js Developer": [
+        "JavaScript", "TypeScript", "React.js", "Redux", "Next.js", "Node.js", "Express.js",
+        "GraphQL", "REST APIs", "HTML", "CSS", "Tailwind CSS", "Material-UI", "Chakra UI",
+        "Webpack", "Babel", "Jest", "Mocha", "Cypress", "Figma", "Responsive Design"
+    ],
+    "MERN Stack Developer": [
+        "JavaScript", "TypeScript", "React.js", "Redux", "Node.js", "Express.js",
+        "MongoDB", "REST APIs", "GraphQL", "HTML", "CSS", "Bootstrap", "Tailwind CSS",
+        "Material-UI", "Chakra UI", "Next.js", "Vue.js", "Axios", "WebSockets"
+    ],
+    "Java Developer": [
+        "Java", "Spring Boot", "Hibernate", "REST APIs", "Microservices", "Maven",
+        "Thymeleaf", "JDBC", "JSON", "JUnit", "Mockito", "Oracle Database", "Git",
+        "Jenkins", "Docker", "Kubernetes", "CI/CD Pipelines", "Spring Security"
+    ],
+    "Python Developer": [
+        "Python", "Django", "Flask", "FastAPI", "NumPy", "Pandas", "SQLAlchemy",
+        "REST APIs", "TensorFlow", "PyTorch", "Scikit-learn", "BeautifulSoup", "Celery",
+        "PostgreSQL", "MongoDB", "Redis", "Docker", "CI/CD Pipelines", "Agile Development"
+    ],
+    "JavaScript Developer": [
+        "JavaScript", "TypeScript", "Node.js", "React.js", "Angular", "Vue.js", "Express.js",
+        "REST APIs", "GraphQL", "HTML", "CSS", "Bootstrap", "Tailwind CSS", "Material-UI",
+        "Webpack", "Babel", "Responsive Design", "Git", "Jest", "Mocha", "Cypress"
     ]
 }

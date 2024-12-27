@@ -40,6 +40,7 @@ def extract_resume():
         else:
             return jsonify({"error": "Unsupported file type"}), 400
 
+
         # Print the extracted text to the console for debugging
         print(f"Extracted Text from Resume:\n{extracted_text}\n")
 

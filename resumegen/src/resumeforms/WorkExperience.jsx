@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { TrashIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "@heroicons/react/20/solid";
+import React, { useState, useEffect, useRef } from "react";
+import { TrashIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon, ChevronDownIcon } from "@heroicons/react/20/solid";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { toast } from "react-toastify";
@@ -8,16 +8,44 @@ import { useStep } from "../hooks/StepContext";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../services/firebaseConfig";
 import { saveWorkExperience, fetchWorkExperience } from "../services/firebaseUtils";
+import MonthYearPicker from "../common/MonthYearPicker";
+
+const jobRolesData = {
+  "Java Full Stack Developer": "<ul><li>Experience in developing full-stack applications using Java, Spring Boot, and modern frontend technologies</li><li>Proficient in designing and implementing scalable solutions with robust backend systems and responsive user interfaces</li></ul>",
+  "Python Full Stack Developer": "<ul><li>Skilled in building end-to-end applications using Python frameworks like Django/Flask and modern JavaScript frameworks</li><li>Experience in developing RESTful APIs and implementing responsive frontend solutions</li></ul>",
+  "Frontend Developer": "<ul><li>Specialized in creating responsive and intuitive user interfaces using modern frontend technologies like React, HTML5, and CSS3</li><li>Focused on delivering exceptional user experiences with clean and efficient code</li></ul>",
+  "Backend Developer": "<ul><li>Expert in designing and implementing server-side logic, APIs, and database architectures</li><li>Proficient in optimizing application performance and ensuring data security</li></ul>",
+  "ReactJS Developer": "<ul><li>Specialized in building dynamic user interfaces using React.js and related technologies</li><li>Experienced in state management, component lifecycle, and modern React patterns</li></ul>",
+  "MERN Stack Developer": "<ul><li>Proficient in developing full-stack applications using MongoDB, Express.js, React, and Node.js</li><li>Experienced in building scalable web applications with modern JavaScript technologies</li></ul>",
+  "Cloud Developer": "<ul><li>Skilled in developing cloud-native applications and implementing cloud infrastructure solutions</li><li>Experienced with major cloud platforms and modern cloud architecture patterns</li></ul>",
+  "Java Developer": "<ul><li>Specialized in developing robust Java applications with strong object-oriented programming principles</li><li>Experienced in building enterprise-level software solutions</li></ul>",
+  "Python Developer": "<ul><li>Proficient in developing Python applications with expertise in various Python frameworks and libraries</li><li>Experienced in building efficient and maintainable code</li></ul>",
+  "JavaScript Developer": "<ul><li>Expert in modern JavaScript development including ES6+ features and popular frameworks</li><li>Skilled in building interactive and responsive web applications</li></ul>",
+  "AWS Admin": "<ul><li>Experienced in managing and optimizing AWS infrastructure and implementing security best practices</li><li>Skilled in automation and monitoring of cloud services</li></ul>",
+  "Junior DevOps Engineer": "<ul><li>Focused on implementing CI/CD pipelines and automating deployment processes</li><li>Learning to bridge the gap between development and operations</li></ul>",
+  "Cloud Engineer": "<ul><li>Specialized in designing and implementing cloud infrastructure solutions</li><li>Experienced in cloud migration, optimization, and maintenance of cloud resources</li></ul>",
+  "Junior AI Engineer": "<ul><li>Learning to develop and implement artificial intelligence solutions</li><li>Gaining experience in machine learning frameworks and AI application development</li></ul>",
+  "Junior NLP Engineer": "<ul><li>Beginning to specialize in natural language processing applications</li><li>Learning to implement NLP models and solutions for text analysis and processing</li></ul>",
+  "Computer Vision Engineer": "<ul><li>Focused on developing computer vision applications and implementing image processing solutions</li><li>Experienced with popular computer vision libraries and frameworks</li></ul>",
+  "Junior Data Analyst": "<ul><li>Learning to analyze and interpret complex data sets</li><li>Gaining experience in data visualization and statistical analysis tools</li></ul>",
+  "Junior Data Scientist": "<ul><li>Beginning to apply statistical analysis and machine learning to solve business problems</li><li>Learning to develop predictive models and data-driven solutions</li></ul>",
+  "Junior Machine Learning Engineer": "<ul><li>Learning to develop and deploy machine learning models</li><li>Gaining experience in various ML frameworks and model optimization techniques</li></ul>",
+  "Junior Python Data Scientist": "<ul><li>Beginning to use Python for data analysis and machine learning</li><li>Learning to implement data science solutions using Python libraries</li></ul>",
+  "Junior Data Engineer": "<ul><li>Learning to design and maintain data pipelines and infrastructures</li><li>Gaining experience in data warehousing and ETL processes</li></ul>"
+};
 
 const WorkExperience = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { setCurrentStep } = useStep();
-  
+
   // State for user authentication and loading
   const [userId, setUserId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  const [dropdownStates, setDropdownStates] = useState([]);
+  const dropdownRefs = useRef([]);
 
   // Extract resumeId from URL
   const resumeId = new URLSearchParams(location.search).get('resumeId');
@@ -80,6 +108,37 @@ const WorkExperience = () => {
     ]);
   };
 
+  useEffect(() => {
+    setDropdownStates(experiences.map(() => false));
+    dropdownRefs.current = experiences.map(() => React.createRef());
+  }, [experiences.length]);
+
+  const handleJobSelect = (index, jobTitle) => {
+    const updatedExperiences = [...experiences];
+    updatedExperiences[index].jobTitle = jobTitle;
+    updatedExperiences[index].description = jobRolesData[jobTitle];
+    setExperiences(updatedExperiences);
+    toggleDropdown(index);
+  };
+
+  const toggleDropdown = (index) => {
+    const newDropdownStates = dropdownStates.map((state, i) => i === index ? !state : false);
+    setDropdownStates(newDropdownStates);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      dropdownRefs.current.forEach((ref, index) => {
+        if (ref.current && !ref.current.contains(event.target)) {
+          setDropdownStates(prev => prev.map((state, i) => i === index ? false : state));
+        }
+      });
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleDeleteExperience = (index) => {
     const updatedExperiences = experiences.filter((_, i) => i !== index);
     setExperiences(updatedExperiences);
@@ -96,9 +155,20 @@ const WorkExperience = () => {
     const form = event.target;
 
     // Custom validation to check end date is not before start date
-    const isDateValid = experiences.every(exp => 
-      !exp.startDate || !exp.endDate || exp.endDate >= exp.startDate
-    );
+    // Custom validation to check end date is not before start date
+const isDateValid = experiences.every(exp => {
+  if (!exp.startDate || !exp.endDate || exp.endDate === "Present") {
+    return true;
+  }
+
+  const [startMonth, startYear] = exp.startDate.split(", ");
+  const [endMonth, endYear] = exp.endDate.split(", ");
+  
+  const startDate = new Date(`${startMonth} 1, ${startYear}`);
+  const endDate = new Date(`${endMonth} 1, ${endYear}`);
+  
+  return endDate >= startDate;
+});
 
     if (!isDateValid) {
       toast.error("End date cannot be before start date!", {
@@ -256,51 +326,70 @@ const WorkExperience = () => {
 
               {/* Job Title, Start Date, End Date in one line */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 col-span-1 sm:col-span-2">
-                <div>
+                <div ref={dropdownRefs.current[index]} className="relative">
                   <label className="block text-sm font-medium text-gray-700">
                     Job Title
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Enter job title"
-                    className="mt-1 p-3 border border-gray-300 rounded-lg w-full bg-white/70 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 hover:bg-white/90"
-                    value={experience.jobTitle}
-                    onChange={(e) =>
-                      handleInputChange(index, "jobTitle", e.target.value)
-                    }
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Enter job title"
+                      className="mt-1 p-3 pr-10 border border-gray-300 rounded-lg w-full bg-white/70 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 hover:bg-white/90"
+                      value={experience.jobTitle}
+                      onChange={(e) => handleInputChange(index, "jobTitle", e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => toggleDropdown(index)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    >
+                      <ChevronDownIcon className="h-5 w-5" />
+                    </button>
+                  </div>
+                  {dropdownStates[index] && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {Object.keys(jobRolesData).map((title) => (
+                        <button
+                          key={title}
+                          type="button"
+                          className="w-full text-left px-4 py-2 hover:bg-purple-50 focus:outline-none focus:bg-purple-50 transition-colors"
+                          onClick={() => handleJobSelect(index, title)}
+                        >
+                          {title}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Start Date
-                  </label>
-                  <input
-                    type="month"
-                    className="mt-1 p-3 border border-gray-300 rounded-lg w-full bg-white/70 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 hover:bg-white/90"
-                    value={experience.startDate}
-                    onChange={(e) =>
-                      handleInputChange(index, "startDate", e.target.value)
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    End Date
-                  </label>
-                  <input
-                    type="month"
-                    min={experience.startDate}
-                    className="mt-1 p-3 border border-gray-300 rounded-lg w-full bg-white/70 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 hover:bg-white/90"
-                    value={experience.endDate}
-                    onChange={(e) =>
-                      handleInputChange(index, "endDate", e.target.value)
-                    }
-                  />
-                </div>
+  <label className="block text-sm font-medium text-gray-700">
+    Start Date
+  </label>
+  <MonthYearPicker
+    value={experience.startDate}
+    onChange={(value) => handleInputChange(index, "startDate", value)}
+    yearsBack={50}  // Show 50 years back
+    isEndDate={false}  // This is a start date
+  />
+</div>
+<div>
+  <label className="block text-sm font-medium text-gray-700">
+    End Date
+  </label>
+  <MonthYearPicker
+    value={experience.endDate}
+    onChange={(value) => handleInputChange(index, "endDate", value)}
+    min={experience.startDate}
+    yearsBack={50}  // Show 50 years back
+    isEndDate={true}  // This is an end date, show "Present" option
+    allowPresent={true}
+  />
+</div>
               </div>
 
               {/* Description */}
-              <div className="col-span-1 sm:col-span-2">
+              <div div className="col-span-1 sm:col-span-2" >
                 <label className="block text-sm font-medium text-gray-700">
                   Description
                 </label>
@@ -308,6 +397,12 @@ const WorkExperience = () => {
                   <ReactQuill
                     theme="snow"
                     placeholder="Describe your responsibilities and achievements"
+                    modules={{
+                      toolbar: [
+                        [{ header: [1, 2, 3, false] }], // Headers
+                        ["bold", "italic", "underline", "strike", { list: "bullet" }], // Basic formatting
+                      ],
+                    }}
                     style={{
                       backgroundColor: "rgba(255,255,255,0.7)",
                       borderRadius: "0.5rem",
@@ -322,7 +417,8 @@ const WorkExperience = () => {
                 </div>
               </div>
             </React.Fragment>
-          ))}
+          ))
+          }
 
           {/* Add Experience Button and Save Button */}
           <div className="col-span-1 sm:col-span-2 flex justify-between items-center mt-[-5px]">
@@ -350,9 +446,9 @@ const WorkExperience = () => {
               )}
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+        </form >
+      </div >
+    </div >
   );
 };
 

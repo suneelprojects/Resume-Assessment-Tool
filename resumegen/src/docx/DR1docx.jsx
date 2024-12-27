@@ -89,13 +89,25 @@ const createWorkExperienceEntries = (workExperience) => {
                         color: '000000'
                     }),
                     new TextRun({
-                        text: `(${exp.startDate} - ${exp.endDate || "Present"})`,
+                        text: `${exp.startDate}${exp.startDate && exp.endDate ? " - " : ""}${exp.endDate}`,
                         size: 22,
                         color: '000000'
                     })
                 ],
                 tabStops: [{ type: TabStopType.RIGHT, position: 9000 }],
                 spacing: { before: 100 }
+            }),
+            // Add job title in a new paragraph
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: exp.jobTitle,
+                        size: 22,
+                        color: '666666',
+                        italics: true
+                    })
+                ],
+                spacing: { before: 20 }
             }),
             ...parseDescription(exp.description).map(desc =>
                 new Paragraph({
@@ -177,6 +189,20 @@ const createContactSection = (personalDetails) => {
             spacing: { before: 20 }
         }));
     }
+    // Add GitHub
+    if (personalDetails.github) {
+        contactInfo.push(new Paragraph({
+            children: [
+                new TextRun({
+                    text: 'GitHub', // Display "GitHub" as the text
+                    size: 22,
+                    color: '666666',
+                    hyperlink: personalDetails.github // Use the link as the hyperlink
+                })
+            ],
+            spacing: { before: 20 }
+        }));
+    }
 
     if (personalDetails.otherLinks && Array.isArray(personalDetails.otherLinks)) {
         personalDetails.otherLinks.forEach(linkObj => {
@@ -252,9 +278,9 @@ const createEducationEntries = (education) => {
                     color: '000000'
                 }),
                 new TextRun({
-                    text: `\t${edu.startDate} - ${edu.endDate}`,
+                    text: `\t${edu.startDate}${edu.startDate && edu.endDate ? " - " : ""}${edu.endDate}`,
                     size: 22,
-                    color: '666666'
+                    color: '000000'
                 })
             ],
             tabStops: [{ type: TabStopType.RIGHT, position: 9000 }],
@@ -274,22 +300,44 @@ const createEducationEntries = (education) => {
     ]);
 };
 
+const sortSkillCategories = (skills) => {
+    if (!skills) return [];
+
+    const skillsArray = Object.entries(skills);
+    const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+
+    // Separate technical skills (default categories) and custom categories
+    const technicalSkills = skillsArray.filter(([category]) =>
+        defaultCategories.includes(category)
+    );
+
+    const customSkills = skillsArray.filter(([category]) =>
+        !defaultCategories.includes(category)
+    );
+
+    // Return with technical skills first, followed by custom categories
+    return [...technicalSkills, ...customSkills];
+};
+
 const createSkillsEntries = (skills) => {
     if (!hasSkills(skills)) {
         return [];
     }
 
-    return Object.entries(skills).flatMap(([category, skillList]) => {
+    return sortSkillCategories(skills).flatMap(([category, skillList]) => {
         if (!skillList || !skillList.length) return [];
 
+        const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+        const isDefaultCategory = defaultCategories.includes(category);
         const filteredSkills = skillList.filter(skill => skill && skill.trim() !== '');
+
         if (!filteredSkills.length) return [];
 
         return [
             new Paragraph({
                 children: [
                     new TextRun({
-                        text: category.trim().toLowerCase() === "full stack" ? "Technical Skills" : category,
+                        text: isDefaultCategory ? "Technical Skills" : category,
                         bold: true,
                         size: 24,
                         color: '000000'

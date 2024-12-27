@@ -26,6 +26,34 @@ const ResumeEditor = () => {
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [showResumeModal, setShowResumeModal] = useState(false);
+
+  // Resume Modal Component with updated styling
+  const ResumeModal = ({ isOpen, onClose, children }) => {
+    if (!isOpen) return null;
+  
+    return (
+      <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black bg-opacity-50">
+        <div className="relative bg-white rounded-lg shadow-xl w-full max-w-[1024px] h-[90vh] overflow-y-auto overflow-x-hidden">
+          <button
+            onClick={onClose}
+            className="fixed right-6 top-6 text-gray-500 hover:text-gray-700 z-[60] bg-white rounded-full p-2 shadow-md"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div className="flex justify-center pt-4">
+            <div className="transform scale-[0.37] origin-top">
+              <div className="w-[950px]">
+                {children}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Loading spinner component
   const LoadingSpinner = () => (
@@ -143,64 +171,85 @@ const ResumeEditor = () => {
 
   return (
     <div className="min-h-screen pt-20 pb-10">
-      {renderDownloadModal()}
+    {renderDownloadModal()}
 
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col sm:flex-row justify-center items-center mb-8 gap-4 sm:gap-4">
-          <button
-            onClick={handleEditResume}
-            className="w-full sm:w-auto px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-300 flex items-center justify-center space-x-2 shadow-md"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-              <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
-            </svg>
-            <span>Edit Resume</span>
-          </button>
+    <div className="container mx-auto px-4">
+      <div className="flex flex-col sm:flex-row justify-center items-center mb-8 gap-4">
+        <button
+          onClick={handleEditResume}
+          className="w-full sm:w-auto px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-300 flex items-center justify-center space-x-2 shadow-md"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+            <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
+          </svg>
+          <span>Edit Resume</span>
+        </button>
 
-          <button
-            onClick={() => setIsDownloadOpen(true)}
-            className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-300 flex items-center justify-center space-x-2 shadow-md"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-            <span>Download Resume</span>
-          </button>
+        <button
+          onClick={() => setIsDownloadOpen(true)}
+          className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-300 flex items-center justify-center space-x-2 shadow-md"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+          <span>Download Resume</span>
+        </button>
 
-          <button
-            onClick={() => setIsScoreModalOpen(true)}
-            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center space-x-2 shadow-md"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-              <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-            </svg>
-            <span>Check Your Score</span>
-          </button>
-        </div>
-     
-
-        <div className="w-full max-w-4xl mx-auto">
-          <div className="border border-gray-300 rounded-lg shadow-sm p-8">
-            {templateComponents[selectedTemplate] || (
-              <div className="text-center text-red-500 text-xl">
-                Template not found
-              </div>
-            )}
-          </div>
-        </div>
-
-        <ScoreCheckModal
-  isOpen={isScoreModalOpen}
-  onClose={() => setIsScoreModalOpen(false)}
-  isComplete={isComplete}
-  resumeData={resumeData} // Pass the resume data
-  resumeId={resumeId} // Pass the resume id
-/>
-
+        <button
+          onClick={() => setIsScoreModalOpen(true)}
+          className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center space-x-2 shadow-md"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+            <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+          </svg>
+          <span>Check Your Score</span>
+        </button>
       </div>
+
+      {/* Show Resume button for small/medium screens (below 768px) */}
+      <div className="md:hidden flex justify-center mb-8">
+        <button
+          onClick={() => setShowResumeModal(true)}
+          className="px-6 py-3 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors duration-300 shadow-md text-lg font-medium"
+        >
+          Show Resume
+        </button>
+      </div>
+
+      {/* Resume Modal */}
+      <ResumeModal
+        isOpen={showResumeModal}
+        onClose={() => setShowResumeModal(false)}
+      >
+        {templateComponents[selectedTemplate] || (
+          <div className="text-center text-red-500 text-xl">
+            Template not found
+          </div>
+        )}
+      </ResumeModal>
+
+      {/* Resume display for medium and large screens (768px and above) */}
+      <div className="hidden md:block" style={{ width: '896px', margin: '0 auto' }}>
+        <div className="border border-gray-300 rounded-lg shadow-sm p-8">
+          {templateComponents[selectedTemplate] || (
+            <div className="text-center text-red-500 text-xl">
+              Template not found
+            </div>
+          )}
+        </div>
+      </div>
+
+      <ScoreCheckModal
+        isOpen={isScoreModalOpen}
+        onClose={() => setIsScoreModalOpen(false)}
+        isComplete={isComplete}
+        resumeData={resumeData}
+        resumeId={resumeId}
+      />
     </div>
+  </div>
   );
 };
 

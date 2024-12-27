@@ -75,6 +75,48 @@ export const PDFDownload = ({ resumeData, template, onClose }) => {
     }
   });
 
+   // Helper function to clean URLs
+   const cleanUrl = (url) => {
+    if (!url) return '';
+    return url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+  };
+
+  // Function to build contact info text
+  const buildContactInfo = () => {
+    const { personalDetails } = resumeData;
+    const parts = [];
+
+    if (personalDetails.address?.trim()) {
+      parts.push(personalDetails.address);
+    }
+
+    if (personalDetails.phone?.trim()) {
+      parts.push(personalDetails.phone);
+    }
+
+    if (personalDetails.email?.trim()) {
+      parts.push(personalDetails.email);
+    }
+
+    if (personalDetails.linkedin?.trim()) {
+      parts.push(cleanUrl(personalDetails.linkedin));
+    }
+
+    if (personalDetails.github?.trim()) {
+      parts.push(cleanUrl(personalDetails.github));
+    }
+
+    if (personalDetails.otherLinks?.length > 0) {
+      personalDetails.otherLinks.forEach(link => {
+        if (link.url?.trim()) {
+          parts.push(cleanUrl(link.url));
+        }
+      });
+    }
+
+    return parts.join(' • ');
+  };
+
    // Validation helper functions
    const parseHTML = (htmlString) => {
     if (!htmlString || htmlString.trim() === '' || htmlString === '<br>') {
@@ -187,6 +229,27 @@ export const PDFDownload = ({ resumeData, template, onClose }) => {
     return parsedAchievements.length > 0;
   };
 
+  // Add sorting function for skills categories
+  const sortSkillCategories = (skills) => {
+    if (!skills) return [];
+
+    const skillsArray = Object.entries(skills);
+    const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+
+    // Separate technical skills (default categories) and custom categories
+    const technicalSkills = skillsArray.filter(([category]) =>
+      defaultCategories.includes(category)
+    );
+
+    const customSkills = skillsArray.filter(([category]) =>
+      !defaultCategories.includes(category)
+    );
+
+    // Return with technical skills first, followed by custom categories
+    return [...technicalSkills, ...customSkills];
+  };
+
+
   // PDF Document Component
   const ResumePDF = () => (
     <Document>
@@ -197,15 +260,7 @@ export const PDFDownload = ({ resumeData, template, onClose }) => {
             {resumeData.personalDetails.firstName} {resumeData.personalDetails.lastName}
           </Text>
           <Text style={styles.contactInfo}>
-            {resumeData.personalDetails.address} • {" "}
-            {resumeData.personalDetails.phone} • {" "}
-            {resumeData.personalDetails.email}
-            {Object.entries(resumeData.personalDetails)
-              .filter(([key, value]) =>
-                ['linkedin', 'github', 'youtube', 'portfolio', 'website'].includes(key) && value
-              )
-              .map(([key, value], index) => ` • ${key.charAt(0).toUpperCase() + key.slice(1)}`)
-              .join('')}
+            {buildContactInfo()}
           </Text>
         </View>
 
@@ -328,18 +383,23 @@ export const PDFDownload = ({ resumeData, template, onClose }) => {
         {hasSkills() && (
           <View style={styles.sectionContent}>
             <Text style={styles.sectionTitle}>SKILLS</Text>
-            {Object.entries(resumeData.skills)
+            {sortSkillCategories(resumeData.skills)
               .filter(([_, items]) => Array.isArray(items) && items.some(item => item && item.trim() !== ''))
-              .map(([category, items], index) => (
-                <View key={index}>
-                  <Text style={styles.jobTitle}>
-                    {category.trim().toLowerCase() === "full stack" ? "Technical Skills" : category}
-                  </Text>
-                  <Text style={styles.skills}>
-                    {items.filter(item => item && item.trim() !== '').join(", ")}
-                  </Text>
-                </View>
-              ))}
+              .map(([category, items], index) => {
+                const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+                const isDefaultCategory = defaultCategories.includes(category);
+
+                return (
+                  <View key={index}>
+                    <Text style={styles.jobTitle}>
+                      {isDefaultCategory ? "Technical Skills" : category}
+                    </Text>
+                    <Text style={styles.skills}>
+                      {items.filter(item => item && item.trim() !== '').join(", ")}
+                    </Text>
+                  </View>
+                );
+              })}
           </View>
         )}
 

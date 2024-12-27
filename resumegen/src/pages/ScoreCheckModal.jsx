@@ -25,34 +25,34 @@ const ScoreCheckModal = ({ isOpen, onClose, resumeData, resumeId }) => {
             Check Your Resume Score
           </h3>
           <div className="flex flex-col space-y-4 mt-4">
-  <button
-    onClick={() => {
-      console.log("Navigating with data:", { resumeData, resumeId }); // Log the data before navigating
-      handleButtonClick('/ats-score'); // Navigate to /check-score
-    }}
-    className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300"
-  >
-    Resume Worded Score
-  </button>
-  <button
-    onClick={() => {
-      console.log("Navigating with data:", { resumeData, resumeId }); // Log the data before navigating
-      handleButtonClick('/role-score'); // Navigate to /checker
-    }}
-    className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-300"
-  >
-    Jobscan Score
-  </button>
-  <button
-    onClick={() => {
-      console.log("Navigating with data:", { resumeData, resumeId }); // Log the data before navigating
-      handleButtonClick('/jd-score'); // Navigate to /score
-    }}
-    className="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-300"
-  >
-    CareerSet Score
-  </button>
-</div>
+            <button
+              onClick={() => {
+                console.log("Navigating with data:", { resumeData, resumeId }); // Log the data before navigating
+                handleButtonClick(`/ats-score?resumeId=${resumeId}`); // Navigate to /check-score
+              }}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300"
+            >
+              ATS Score
+            </button>
+            <button
+              onClick={() => {
+                console.log("Navigating with data:", { resumeData, resumeId }); // Log the data before navigating
+                handleButtonClick(`/role-score?resumeId=${resumeId}`); // Navigate to /checker
+              }}
+              className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-300"
+            >
+              Job Role Score
+            </button>
+            <button
+              onClick={() => {
+                console.log("Navigating with data:", { resumeData, resumeId }); // Log the data before navigating
+                handleButtonClick(`/jd-score?resumeId=${resumeId}`); // Navigate to /score
+              }}
+              className="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-300"
+            >
+              Job Description Score
+            </button>
+          </div>
 
         </div>
         <div className="px-6 py-4 mt-[-30px] sm:py-5 flex justify-end">
