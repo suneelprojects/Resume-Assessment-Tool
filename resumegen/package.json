@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "http://socialhire/resume-checker.in",
+  "homepage": "http://socialhire.in/resume-checker",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
