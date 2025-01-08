@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { savePersonalDetails, saveObjective, saveWorkExperience, saveProjects, saveSkills, saveAchievements } from '../services/firebaseUtils';
+import {
+    savePersonalDetails,
+    saveObjective,
+    saveWorkExperience,
+    saveProjects,
+    saveSkills,
+    saveAchievements,
+} from '../services/firebaseUtils';
 import { auth } from '../services/firebaseConfig';
 import { toast } from 'react-toastify';
 
@@ -34,15 +41,26 @@ const JobRolePage = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to fetch profile data from backend');
+                throw new Error('API response was not ok');
             }
 
-            return await response.json();
+            const profileData = await response.json();
+
+            // Ensure skills are an object
+            if (typeof profileData.Skills === 'string') {
+                profileData.Skills = {
+                    technicalSkills: profileData.Skills.split(',').map((skill) => skill.trim()),
+                    softSkills: [],
+                };
+            }
+
+            return profileData;
         } catch (error) {
-            console.error('Error in fetchProfileData:', error);
+            console.error('Error fetching profile data from backend:', error);
             throw error;
         }
     };
+
     const saveProfileToFirestore = async (userId, resumeId, profileData) => {
         try {
             // Save personal details, including jobTitle
@@ -70,9 +88,8 @@ const JobRolePage = () => {
             if (
                 profileData.Skills &&
                 typeof profileData.Skills === 'object' &&
-                profileData.Skills.technicalSkills &&
-                profileData.Skills.softSkills
-            ) {
+                profileData.Skills.technicalSkills
+                        ) {
                 await saveSkills(userId, resumeId, profileData.Skills);
             } else {
                 console.warn('Invalid Skills format. Skills not saved.');
@@ -103,23 +120,16 @@ const JobRolePage = () => {
                 return;
             }
 
-            try {
-                // Fetch profile data (will use backend API)
-                const profileData = await fetchProfileData(jobRole);
+            // Fetch profile data from backend
+            const profileData = await fetchProfileData(jobRole);
 
-                // Save all profile data to Firestore using the existing resumeId
-                await saveProfileToFirestore(userId, resumeId, profileData);
+            // Save profile data to Firestore
+            await saveProfileToFirestore(userId, resumeId, profileData);
 
-                toast.success('Resume created successfully!');
-                // Navigate to template selection page
-                navigate(`/choosetemplate?resumeId=${resumeId}`);
-            } catch (error) {
-                console.error('Error while populating resume:', error);
-                toast.warning('Resume created with basic information. Some data may be missing.');
-                navigate(`/choosetemplate?resumeId=${resumeId}`);
-            }
+            toast.success('Resume created successfully!');
+            navigate(`/choosetemplate?resumeId=${resumeId}`);
         } catch (error) {
-            console.error('Error in resume creation process:', error);
+            console.error('Error during resume creation process:', error);
             toast.error('Failed to create resume');
         } finally {
             setIsLoading(false);
@@ -136,7 +146,7 @@ const JobRolePage = () => {
                             type="text"
                             value={jobRole}
                             onChange={(e) => setJobRole(e.target.value)}
-                            placeholder="e.g., Software Developer with 2 years of exp"
+                            placeholder="e.g., Software Developer"
                             className="w-full p-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
                         />
                     </div>
@@ -153,4 +163,4 @@ const JobRolePage = () => {
     );
 };
 
-export default JobRolePage;
+export default JobRolePage; 
