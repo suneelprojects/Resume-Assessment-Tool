@@ -28,10 +28,11 @@ resume_model = ResumeModel()
 
 # Ensure 'uploads' folder exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-ROLE_SKILLS_PATH = r"D:\resumegen (4)\backend\role_skills.json"
+ROLE_SKILLS_PATH = os.path.join(os.getcwd(), 'role_skills.json')
 
 # Dataset path for profile generation
-default_dataset_path = "C:\\Users\\samee\\Downloads\\Updated_Resume_Dataset_v2.csv"
+default_dataset_path = os.path.join(os.getcwd(), 'Updated_Resume_Dataset_v2.csv')
+
 def load_role_skills(file_path):
     try:
         with open(file_path, 'r') as file:

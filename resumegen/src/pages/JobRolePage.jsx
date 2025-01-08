@@ -146,9 +146,9 @@ const JobRolePage = () => {
                             type="text"
                             value={jobRole}
                             onChange={(e) => setJobRole(e.target.value)}
-                            placeholder="e.g., Software Developer"
-                            className="w-full p-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
-                        />
+                            placeholder="e.g., Software Developer with 3 years of experience"
+                            className="w-full p-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm"
+                            />
                     </div>
                     <button
                         type="submit"
