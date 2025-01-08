@@ -18,6 +18,34 @@ import { db, auth } from "./firebaseConfig"; // Import Firebase config
 
 // ================== Authentication Functions ==================
 
+// In your firebase services file
+export const createUserDocument = async (user, additionalData) => {
+  if (!user) {
+    console.error("No user provided to createUserDocument");
+    return;
+  }
+
+  try {
+    console.log("Creating document for user:", user.uid); // Debug log
+    const userRef = doc(db, "users", user.uid);
+    
+    const userData = {
+      uid: user.uid,
+      email: user.email,
+      displayName: additionalData.displayName,
+      createdAt: new Date().toISOString(),
+    };
+
+    console.log("Attempting to save user data:", userData); // Debug log
+    await setDoc(userRef, userData);
+    console.log("User document created successfully"); // Debug log
+    return userData;
+  } catch (error) {
+    console.error("Error in createUserDocument:", error);
+    throw error;
+  }
+};
+
 /**
  * Register a new user
  **/

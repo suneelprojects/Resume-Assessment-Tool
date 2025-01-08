@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
+import DOMPurify from "dompurify";
 import "react-circular-progressbar/dist/styles.css";
 
 const Atsscore = () => {
@@ -38,8 +39,8 @@ const Atsscore = () => {
       "Python Full Stack Developer",
       "Frontend Developer",
       "Backend Developer",
-      "Reactjs Developer",
-      "Mern Stack Developer",
+      "React.js Developer",
+      "MERN Stack Developer",
       "Cloud Developer",
       "Java Developer",
       "Python Developer",
@@ -109,252 +110,255 @@ const Atsscore = () => {
     }
   };
 
-  const renderResumeDetails = () => {
-    if (resumeData) {
-      const { personalDetails, objective, skills, workExperience, education, projects } = resumeData;
+  const SECTION_ORDER = [
+    "objective",
+    "jobTitle",
+    "personalDetails",
+    "education",
+    "skills",
+    "projects",
+    "workExperience",
+    "achievements",
+  ];
 
+  const renderField = (field) => {
+    if (Array.isArray(field)) {
       return (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-700">Personal Details:</h3>
-          <ul className="list-disc pl-5">
-            <li>Name: {`${personalDetails.firstName} ${personalDetails.lastName}`}</li>
-            <li>Email: {personalDetails.email}</li>
-            <li>Phone: {personalDetails.phone}</li>
-            {personalDetails.linkedin && <li>LinkedIn: {personalDetails.linkedin}</li>}
-            {personalDetails.github && <li>GitHub: {personalDetails.github}</li>}
-          </ul>
-
-          {objective && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700">Objective:</h3>
-              <p>{objective}</p>
+        <ul className="list-disc pl-5">
+          {field.map((item, index) => (
+            <li key={index}>{renderField(item)}</li>
+          ))}
+        </ul>
+      );
+    } else if (typeof field === "object" && field !== null) {
+      return (
+        <div className="pl-4 border-l-2 border-gray-200">
+          {Object.entries(field).map(([key, value], index) => (
+            <div key={index} className="mb-2">
+              <strong className="capitalize">{key}:</strong> {renderField(value)}
             </div>
-          )}
-
-          {skills && Object.keys(skills).length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700">Skills:</h3>
-              <ul className="list-disc pl-5">
-                {Object.entries(skills).map(([category, items], index) => (
-                  <li key={index}>
-                    {category}: {items.join(", ")}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {workExperience && workExperience.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700">Work Experience:</h3>
-              <ul className="list-disc pl-5">
-                {workExperience.map((exp, index) => (
-                  <li key={index}>
-                    {exp.jobTitle} at {exp.company} ({exp.startDate} - {exp.endDate})
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {education && education.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700">Education:</h3>
-              <ul className="list-disc pl-5">
-                {education.map((edu, index) => (
-                  <li key={index}>
-                    {edu.degree} in {edu.major} from {edu.university} ({edu.startDate} - {edu.endDate})
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {projects && projects.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700">Projects:</h3>
-              <ul className="list-disc pl-5">
-                {projects.map((project, index) => (
-                  <li key={index}>
-                    {project.name} - {project.description} ({project.link})
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          ))}
         </div>
       );
-    }
-
-    if (resumeText) {
+    } else if (typeof field === "string" && field.startsWith("http")) {
       return (
-        <textarea
-          value={resumeText}
-          className="w-full h-48 p-4 border border-gray-300 rounded-xl text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none bg-gray-100"
-          readOnly
+        <a
+          href={field}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-indigo-500 underline"
+        >
+          {field}
+        </a>
+      );
+    } else if (typeof field === "string" && field.includes("<")) {
+      return (
+        <div
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(field) }}
+          className="prose"
         />
       );
     }
-
-    return "No resume data available.";
+    return field || "N/A";
   };
+  const renderResumeDetails = () => {
+    if (resumeData) {
+      return (
+        <div className="space-y-6">
+          {SECTION_ORDER.map((section) => {
+            const data = resumeData[section];
+            if (data) {
+              return (
+                <div
+                  key={section}
+                  className="p-6 bg-white rounded-xl shadow-lg border border-gray-200"
+                >
+                  <h3 className="text-xl font-semibold text-gray-800 capitalize border-b pb-2 mb-4">
+                    {section.replace(/([A-Z])/g, " $1").trim()}:
+                  </h3>
+                  <div className="mt-2 text-gray-700">{renderField(data)}</div>
+                </div>
+              );
+            }
+            return null;
+          })}
+        </div>
+      );
+    } else if (resumeText) {
+      return (
+        <div className="p-6 bg-white rounded-xl shadow-lg border border-gray-200">
+          <h3 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">
+            Raw Resume Text:
+          </h3>
+          <textarea
+            value={resumeText}
+            className="w-full h-64 p-4 border border-gray-300 rounded-lg text-gray-700 shadow-sm focus:outline-none bg-gray-100 resize-none"
+            readOnly
+          />
+        </div>
+      );
+    }
+  
+    return (
+      <div className="p-6 bg-white rounded-xl shadow-lg border border-gray-200">
+        <p className="text-gray-500">No resume data available.</p>
+      </div>
+    );
+  };
+  
 
   return (
     <div className="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 min-h-screen flex justify-center items-center py-10">
-      <div className="container max-w-4xl mx-auto px-6 py-8 bg-white rounded-3xl shadow-xl">
+      <div className="container max-w-6xl mx-auto px-6 py-8 bg-gray-100 rounded-3xl shadow-xl">
         <motion.h1
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-3xl font-bold text-center text-gray-800 mb-8"
+          className="text-4xl font-bold text-center text-gray-900 mb-8"
         >
           ATS Score Analysis
         </motion.h1>
 
-        <div className="space-y-8">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="p-6 bg-gray-50 rounded-xl shadow-lg"
+        >
+          <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
+            Extracted Resume Data
+          </h2>
+          <div className="h-[60vh] overflow-y-auto custom-scrollbar">
+            {renderResumeDetails()}
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="flex flex-col md:flex-row gap-6 bg-gray-50 p-6 rounded-xl shadow-md"
+        >
+          <div className="w-full">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">
+              Select Domain
+            </h2>
+            <select
+              value={domain}
+              onChange={handleDomainChange}
+              className="w-full p-4 border border-gray-300 rounded-xl text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-100"
+            >
+              <option value="">Select a domain</option>
+              {Object.keys(rolesByDomain).map((domainOption) => (
+                <option key={domainOption} value={domainOption}>
+                  {domainOption}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="w-full">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">
+              Select Role
+            </h2>
+            <select
+              value={role}
+              onChange={handleRoleChange}
+              className="w-full p-4 border border-gray-300 rounded-xl text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-100"
+            >
+              <option value="">Select a role</option>
+              {rolesByDomain[domain]?.map((roleOption) => (
+                <option key={roleOption} value={roleOption}>
+                  {roleOption}
+                </option>
+              ))}
+            </select>
+          </div>
+        </motion.div>
+
+        <div className="flex justify-center mt-6">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-8 py-3 bg-indigo-500 text-white rounded-xl font-medium shadow-lg hover:bg-indigo-600 transition-all"
+            onClick={handleAnalyzeClick}
+            disabled={loading}
+          >
+            {loading ? "Analyzing..." : "Analyze ATS Score"}
+          </motion.button>
+        </div>
+
+        {results && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="p-6 bg-gray-50 rounded-xl shadow-md"
           >
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">
-              Extracted Resume Data
+            <h2 className="text-xl font-semibold text-center text-gray-700 mb-4">
+              Analysis Results
             </h2>
-            {renderResumeDetails()}
-          </motion.div>
-
-          {/* Domain and Role Selection */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="flex flex-col md:flex-row gap-6 bg-gray-50 p-6 rounded-xl shadow-md"
-          >
-            <div className="w-full">
-              <h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">
-                Select Domain
-              </h2>
-              <select
-                value={domain}
-                onChange={handleDomainChange}
-                className="w-full p-4 border border-gray-300 rounded-xl text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-100"
-              >
-                <option value="">Select a domain</option>
-                {Object.keys(rolesByDomain).map((domainOption) => (
-                  <option key={domainOption} value={domainOption}>
-                    {domainOption}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="w-full">
-              <h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">
-                Select Role
-              </h2>
-              <select
-                value={role}
-                onChange={handleRoleChange}
-                className="w-full p-4 border border-gray-300 rounded-xl text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-100"
-              >
-                <option value="">Select a role</option>
-                {rolesByDomain[domain]?.map((roleOption) => (
-                  <option key={roleOption} value={roleOption}>
-                    {roleOption}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </motion.div>
-
-          <div className="flex justify-center mt-6">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-8 py-3 bg-indigo-500 text-white rounded-xl font-medium shadow-lg hover:bg-indigo-600 transition-all"
-              onClick={handleAnalyzeClick}
-              disabled={loading}
-            >
-              {loading ? "Analyzing..." : "Analyze ATS Score"}
-            </motion.button>
-          </div>
-
-          {/* Results */}
-          {results && (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="p-6 bg-gray-50 rounded-xl shadow-md"
-            >
-              <h2 className="text-xl font-semibold text-center text-gray-700 mb-4">
-                Analysis Results
-              </h2>
-              <div className="grid grid-cols-2 gap-6">
-                {["ats_score", "skill_score", "section_score", "formatting_score"].map((key, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-col items-center bg-white p-4 rounded-xl shadow-lg"
-                  >
-                    <div className="w-40 h-40">
-                      <CircularProgressbar
-                        value={results[key]}
-                        text={`${results[key].toFixed(1)}%`}
-                        styles={buildStyles({
-                          textSize: "24px",
-                          pathColor: index % 2 === 0 ? "#4F46E5" : "#E11D48",
-                          textColor: "#111827",
-                          trailColor: "#D1D5DB",
-                        })}
-                      />
-                    </div>
-                    <p className="mt-4 text-gray-700 font-medium capitalize">
-                      {key.replace("_", " ")}
-                    </p>
+            <div className="grid grid-cols-2 gap-6">
+              {["ats_score", "skill_score", "section_score", "formatting_score"].map((key, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col items-center bg-white p-4 rounded-xl shadow-lg"
+                >
+                  <div className="w-40 h-40">
+                    <CircularProgressbar
+                      value={results[key]}
+                      text={`${results[key].toFixed(1)}%`}
+                      styles={buildStyles({
+                        textSize: "24px",
+                        pathColor: index % 2 === 0 ? "#4F46E5" : "#E11D48",
+                        textColor: "#111827",
+                        trailColor: "#D1D5DB",
+                      })}
+                    />
                   </div>
-                ))}
-              </div>
-
-              {/* Resume Skills */}
-              <div className="mt-8">
-                <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                  Resume Skills
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {results.resume_skills.length > 0
-                    ? results.resume_skills.map((skill, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 text-sm rounded-full bg-green-100 text-green-700 border border-green-300"
-                        >
-                          {skill}
-                        </span>
-                      ))
-                    : "No skills found"}
+                  <p className="mt-4 text-gray-700 font-medium capitalize">
+                    {key.replace("_", " ")}
+                  </p>
                 </div>
-              </div>
+              ))}
+            </div>
 
-              {/* Missing Skills */}
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                  Missing Skills
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {results.missing_skills.length > 0
-                    ? results.missing_skills.map((skill, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 text-sm rounded-full bg-red-100 text-red-700 border border-red-300"
-                        >
-                          {skill}
-                        </span>
-                      ))
-                    : "You have all required skills!"}
-                </div>
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                Resume Skills
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {results.resume_skills.length > 0
+                  ? results.resume_skills.map((skill, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 text-sm rounded-full bg-green-100 text-green-700 border border-green-300"
+                      >
+                        {skill}
+                      </span>
+                    ))
+                  : "No skills found"}
               </div>
-            </motion.div>
-          )}
-        </div>
+            </div>
+
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                Missing Skills
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {results.missing_skills.length > 0
+                  ? results.missing_skills.map((skill, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 text-sm rounded-full bg-red-100 text-red-700 border border-red-300"
+                      >
+                        {skill}
+                      </span>
+                    ))
+                  : "You have all required skills!"}
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   );

@@ -236,7 +236,13 @@ const Projects = () => {
                 <div className="mt-1">
                   <ReactQuill
                     theme="snow"
-                    placeholder="Describe your project"
+                    placeholder={`Describe your Project \nMust use dots for pointing; otherwise, you may not get data.`}
+                    modules={{
+                      toolbar: [
+                        [{ header: [1, 2, 3, false] }], // Headers
+                        ["bold", "italic", "underline", "strike", { list: "bullet" }], // Basic formatting
+                      ],
+                    }}
                     style={{
                       backgroundColor: "rgba(255,255,255,0.7)",
                       borderRadius: "0.5rem",

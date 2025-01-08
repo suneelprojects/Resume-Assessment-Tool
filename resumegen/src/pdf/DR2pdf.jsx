@@ -1,34 +1,19 @@
 import React from 'react';
-import { 
-  Document, 
-  Page, 
-  Text, 
-  View, 
-  StyleSheet, 
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
   PDFDownloadLink,
-  Font 
+  Font
 } from '@react-pdf/renderer';
 
-// Register a web-safe font to ensure content is visible
-Font.register({
-  family: 'Roboto',
-  fonts: [
-    {
-      src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf',
-      fontWeight: 'normal',
-    },
-    {
-      src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf',
-      fontWeight: 'bold',
-    }
-  ]
-});
-
-// Create styles with default font family
+/// Create styles using built-in fonts
 const styles = StyleSheet.create({
   page: {
     padding: 40,
-    fontFamily: 'Roboto',
+    fontFamily: 'Helvetica',
     backgroundColor: 'white',
   },
   header: {
@@ -37,7 +22,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     marginBottom: 4,
     color: '#000000',
   },
@@ -45,11 +30,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#7C3AED',
     marginBottom: -15,
+    fontFamily: 'Helvetica',
   },
   summary: {
     fontSize: 12,
     color: '#4B5563',
     marginBottom: 16,
+    fontFamily: 'Helvetica',
   },
   contactSection: {
     flexDirection: 'row',
@@ -63,10 +50,11 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 10,
     marginHorizontal: 4,
+    fontFamily: 'Helvetica',
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     color: '#1F2937',
     marginBottom: 5,
     marginTop: 0,
@@ -75,13 +63,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#4B5563',
     marginBottom: 16,
+    fontFamily: 'Helvetica',
   },
   skillsSection: {
     marginBottom: 16,
   },
   skillCategory: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     marginBottom: 4,
     color: '#000000',
   },
@@ -97,6 +86,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginRight: 4,
     marginBottom: 4,
+    fontFamily: 'Helvetica',
   },
   experienceItem: {
     marginBottom: 12,
@@ -108,12 +98,19 @@ const styles = StyleSheet.create({
   },
   companyName: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     color: '#374151',
   },
   dates: {
     fontSize: 10,
     color: '#1F2937',
+    fontFamily: 'Helvetica',
+  },
+  workjobTitle: {
+    fontSize: 12,
+    color: "#4b5563",
+    fontStyle: 'italic',
+    fontFamily: 'Helvetica',
   },
   descriptionList: {
     marginLeft: 12,
@@ -122,16 +119,19 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#4B5563',
     marginBottom: 2,
+    fontFamily: 'Helvetica',
   },
   link: {
     color: 'white',
     fontSize: 10,
     textDecoration: 'none',
+    fontFamily: 'Helvetica',
   },
   projectLink: {
     color: '#2563EB',
     fontSize: 10,
     textDecoration: 'none',
+    fontFamily: 'Helvetica',
   },
   linkContainer: {
     flexDirection: 'row',
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 4,
-  }
+  },
 });
 
 // Helper functions for validation
@@ -257,6 +257,44 @@ const hasAchievements = (achievements) => {
   return parsedAchievements.length > 0;
 };
 
+// Helper function to check if contact section should be displayed
+const hasContactInfo = (personalDetails) => {
+  const {
+    phone,
+    email,
+    address,
+    linkedin,
+    github,
+    otherLinks
+  } = personalDetails || {};
+
+  return (
+    (phone && phone.trim() !== '') ||
+    (email && email.trim() !== '') ||
+    (address && address.trim() !== '') ||
+    (linkedin && linkedin.trim() !== '') ||
+    (github && github.trim() !== '') ||
+    (otherLinks && otherLinks.length > 0 && otherLinks.some(link => link.url && link.url.trim() !== ''))
+  );
+};
+
+// Helper function to check if header should be displayed
+const hasHeaderInfo = (personalDetails) => {
+  const {
+    firstName,
+    lastName,
+    jobTitle,
+    summary
+  } = personalDetails || {};
+
+  return (
+    (firstName && firstName.trim() !== '') ||
+    (lastName && lastName.trim() !== '') ||
+    (jobTitle && jobTitle.trim() !== '') ||
+    (summary && summary.trim() !== '')
+  );
+};
+
 // PDF Document component with validations
 const ResumePDF = ({ resumeData }) => {
   const {
@@ -269,30 +307,79 @@ const ResumePDF = ({ resumeData }) => {
     projects = []
   } = resumeData;
 
+  // Add this helper function before the ResumePDF component
+  const sortSkillCategories = (skills) => {
+    if (!skills) return [];
+
+    const skillsArray = Object.entries(skills);
+    const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+
+    // Keep track of original indices for custom categories
+    const customSkillsWithIndex = skillsArray
+      .map((entry, index) => ({ entry, index }))
+      .filter(({ entry: [category] }) => !defaultCategories.includes(category));
+
+    // Sort custom skills based on their original order
+    const sortedCustomSkills = customSkillsWithIndex
+      .sort((a, b) => a.index - b.index)
+      .map(({ entry }) => entry);
+
+    // Technical skills remain the same
+    const technicalSkills = skillsArray.filter(([category]) =>
+      defaultCategories.includes(category)
+    );
+
+    // Return with technical skills first, followed by custom categories in original order
+    return [...technicalSkills, ...sortedCustomSkills];
+  };
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header is always shown */}
-        <View style={styles.header}>
-          <Text style={styles.name}>
-            {personalDetails.firstName} {personalDetails.lastName}
-          </Text>
-          <Text style={styles.jobTitle}>{personalDetails.jobTitle}</Text>
-          <Text style={styles.summary}>{personalDetails.summary}</Text>
-        </View>
+        {/* Header Section - only display if there's header info */}
+        {hasHeaderInfo(personalDetails) && (
+          <View style={styles.header}>
+            {(personalDetails.firstName || personalDetails.lastName) && (
+              <Text style={styles.name}>
+                {personalDetails.firstName} {personalDetails.lastName}
+              </Text>
+            )}
+            {personalDetails.jobTitle && (
+              <Text style={styles.jobTitle}>{personalDetails.jobTitle}</Text>
+            )}
+            {personalDetails.summary && (
+              <Text style={styles.summary}>{personalDetails.summary}</Text>
+            )}
+          </View>
+        )}
 
-        {/* Contact Section is always shown */}
-        <View style={styles.contactSection}>
-          <Text style={styles.contactItem}>{personalDetails.email}</Text>
-          <Text style={styles.contactItem}>{personalDetails.phone}</Text>
-          <Text style={styles.contactItem}>{personalDetails.address}</Text>
-          <Text style={styles.contactItem}>LinkedIn</Text>
-          {personalDetails.otherLinks && personalDetails.otherLinks.map((link, index) => (
-            <Text key={index} style={styles.contactItem}>
-              {link.title}
-            </Text>
-          ))}
-        </View>
+        {/* Contact Section - only display if there's contact info */}
+        {hasContactInfo(personalDetails) && (
+          <View style={styles.contactSection}>
+            {personalDetails.email && (
+              <Text style={styles.contactItem}>{personalDetails.email}</Text>
+            )}
+            {personalDetails.phone && (
+              <Text style={styles.contactItem}>{personalDetails.phone}</Text>
+            )}
+            {personalDetails.address && (
+              <Text style={styles.contactItem}>{personalDetails.address}</Text>
+            )}
+            {personalDetails.linkedin && (
+              <Text style={styles.contactItem}>LinkedIn</Text>
+            )}
+            {personalDetails.github && (
+              <Text style={styles.contactItem}>GitHub</Text>
+            )}
+            {personalDetails.otherLinks?.map((link, index) => (
+              link.url && link.title && (
+                <Text key={index} style={styles.contactItem}>
+                  {link.title}
+                </Text>
+              )
+            ))}
+          </View>
+        )}
 
         {/* Objective - Only shown if valid */}
         {hasObjective(objective) && (
@@ -306,24 +393,27 @@ const ResumePDF = ({ resumeData }) => {
         {hasSkills(skills) && (
           <View style={styles.skillsSection}>
             <Text style={styles.sectionTitle}>Skills</Text>
-            {Object.entries(skills).map(([category, skillList], index) => (
-              skillList && skillList.length > 0 && (
+            {sortSkillCategories(skills).map(([category, skillList], index) => {
+              const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+              const isDefaultCategory = defaultCategories.includes(category);
+
+              return skillList && skillList.length > 0 && (
                 <View key={index} style={{ marginBottom: 8 }}>
                   <Text style={styles.skillCategory}>
-                    {category.trim().toLowerCase() === "full stack" 
-                      ? "Technical Skills" 
-                      : category}
+                    {isDefaultCategory ? "Technical Skills" : category}
                   </Text>
                   <View style={styles.skillsContainer}>
                     {skillList.map((skill, idx) => (
-                      <Text key={idx} style={styles.skillBadge}>
-                        {skill}
-                      </Text>
+                      skill && skill.trim() !== "" && (
+                        <Text key={idx} style={styles.skillBadge}>
+                          {skill}
+                        </Text>
+                      )
                     ))}
                   </View>
                 </View>
-              )
-            ))}
+              );
+            })}
           </View>
         )}
 
@@ -338,9 +428,12 @@ const ResumePDF = ({ resumeData }) => {
                     {experience.company} - {experience.city}
                   </Text>
                   <Text style={styles.dates}>
-                    {experience.startDate} - {experience.endDate || "Present"}
+                    {experience.startDate}
+                    {experience.startDate && experience.endDate && " - "}
+                    {experience.endDate}
                   </Text>
                 </View>
+                <Text style={styles.workjobTitle}>{experience.jobTitle}</Text>
                 <View style={styles.descriptionList}>
                   {parseDescription(experience.description).map((desc, i) => (
                     <Text key={i} style={styles.descriptionItem}>
@@ -388,7 +481,9 @@ const ResumePDF = ({ resumeData }) => {
                     {edu.degree} in {edu.major}
                   </Text>
                   <Text style={styles.dates}>
-                    {edu.startDate} - {edu.endDate}
+                  {edu.startDate}
+                                        {edu.startDate && edu.endDate && " - "}
+                                        {edu.endDate}
                   </Text>
                 </View>
                 <Text style={styles.descriptionItem}>
@@ -420,12 +515,12 @@ const ResumePDF = ({ resumeData }) => {
 // Download component remains the same
 export const DR2PDFDownload = ({ resumeData, onClose }) => {
   const fileName = `${resumeData.personalDetails?.firstName || ''}${resumeData.personalDetails?.lastName || ''}_resume.pdf`;
-  
+
   return (
     <PDFDownloadLink
       document={<ResumePDF resumeData={resumeData} />}
       fileName={fileName}
-      className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+      className="w-full cursor-pointer bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
     >
       {({ blob, url, loading, error }) =>
         loading ? '' : 'Download PDF'

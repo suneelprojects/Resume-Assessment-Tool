@@ -107,44 +107,50 @@ const ProfessionalResume1 = () => {
   }, [resumeData, saveResumeToFirestore]);
 
   const parseHTML = (htmlString) => {
-    if (!htmlString || htmlString.trim() === '' || htmlString === '<br>') {
+    // First check if htmlString exists and convert to string if needed
+    const str = htmlString ? String(htmlString) : '';
+    if (!str || str.trim() === '' || str === '<br>') {
       return [];
     }
     try {
       const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlString, "text/html");
+      const doc = parser.parseFromString(str, "text/html");
       const items = Array.from(doc.querySelectorAll("li")).map((li) => li.textContent);
       return items.filter(item => item && item.trim() !== '');
     } catch {
-      return htmlString.trim() !== '' ? [htmlString] : [];
+      return str.trim() !== '' ? [str] : [];
     }
   };
 
   const parseAchievements = (htmlString) => {
-    if (!htmlString || htmlString.trim() === '' || htmlString === '<br>') {
+    // First check if htmlString exists and convert to string if needed
+    const str = htmlString ? String(htmlString) : '';
+    if (!str || str.trim() === '' || str === '<br>') {
       return [];
     }
     try {
       const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlString, "text/html");
+      const doc = parser.parseFromString(str, "text/html");
       const items = Array.from(doc.querySelectorAll("li")).map((li) => li.textContent);
       return items.filter(item => item && item.trim() !== '');
     } catch {
-      return htmlString.trim() !== '' ? [htmlString] : [];
+      return str.trim() !== '' ? [str] : [];
     }
   };
 
   const parseDescription = (htmlString) => {
-    if (!htmlString || htmlString.trim() === '' || htmlString === '<br>') {
+    // First check if htmlString exists and convert to string if needed
+    const str = htmlString ? String(htmlString) : '';
+    if (!str || str.trim() === '' || str === '<br>') {
       return [];
     }
     try {
       const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlString, "text/html");
+      const doc = parser.parseFromString(str, "text/html");
       const items = Array.from(doc.querySelectorAll("li")).map((li) => li.textContent);
       return items.filter(item => item && item.trim() !== '');
     } catch {
-      return htmlString.trim() !== '' ? [htmlString] : [];
+      return str.trim() !== '' ? [str] : [];
     }
   };
 
@@ -184,8 +190,8 @@ const ProfessionalResume1 = () => {
   } = resumeData;
 
   const ResumePage = ({ children, className = "" }) => (
-    <div className={`w-[210mm] min-h-[297mm] h-fit bg-white shadow-lg mb-4 break-inside-avoid print:shadow-none ${className}`}>
-      <div className="p-8 w-full h-full">
+    <div className={`w-full md:w-[210mm] min-h-[297mm] h-fit bg-white shadow-lg mb-4 break-inside-avoid print:shadow-none ${className}`}>
+      <div className="p-4 md:p-8 w-full h-full">
         {children}
       </div>
     </div>
@@ -255,16 +261,45 @@ const ProfessionalResume1 = () => {
     return parsedAchievements.length > 0;
   };
 
+  // Add new helper function to sort skills categories
+  const sortSkillCategories = (skills) => {
+    if (!skills) return [];
+
+    const skillsArray = Object.entries(skills);
+    const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+
+    // Separate technical skills (default categories) and custom categories
+    const technicalSkills = skillsArray.filter(([category]) =>
+      defaultCategories.includes(category)
+    );
+
+    const customSkills = skillsArray.filter(([category]) =>
+      !defaultCategories.includes(category)
+    );
+
+    // Return with technical skills first, followed by custom categories
+    return [...technicalSkills, ...customSkills];
+  };
+
   const RenderResume = () => {
+
+    // Helper function to clean URLs
+    const cleanUrl = (url) => {
+      if (!url) return '';
+      return url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+    };
+
+    console.log("Other Links Data:", personalDetails.otherLinks);
+
     return (
-      <div className="w-full min-h-screen bg-gray-100 flex flex-col justify-center items-center p-4 print:p-0">
-        <div className="resume-container">
+      <div className="w-full min-h-screen bg-gray-100 flex flex-col justify-center items-center p-2 md:p-4 print:p-0">
+        <div className="resume-container w-full max-w-4xl">
           <ResumePage>
-            <div className="border-b-2 pb-4">
+          <div className="border-b-2 pb-4">
               <h1 className="text-3xl font-bold text-center mb-2">
                 {personalDetails.firstName} {personalDetails.lastName}
               </h1>
-              <p className="text-center text-gray-600">
+              <p className="text-sm md:text-base text-center text-gray-600">
                 {personalDetails.address && `${personalDetails.address} • `}
                 {personalDetails.phone && `${personalDetails.phone} • `}
                 {personalDetails.email && (
@@ -281,7 +316,7 @@ const ProfessionalResume1 = () => {
                       rel="noopener noreferrer"
                       className="text-gray-600"
                     >
-                      LinkedIn
+                      {cleanUrl(personalDetails.linkedin)}
                     </a>
                   </>
                 )}
@@ -294,11 +329,11 @@ const ProfessionalResume1 = () => {
                       rel="noopener noreferrer"
                       className="text-gray-600"
                     >
-                      GitHub
+                      {cleanUrl(personalDetails.github)}
                     </a>
                   </>
                 )}
-                {personalDetails.otherLinks?.length > 0 && personalDetails.otherLinks.map((link, index) => (
+               {personalDetails.otherLinks?.length > 0 && personalDetails.otherLinks.map((link, index) => (
                   <React.Fragment key={index}>
                     {" • "}
                     <a
@@ -307,7 +342,7 @@ const ProfessionalResume1 = () => {
                       rel="noopener noreferrer"
                       className="text-gray-600"
                     >
-                      {link.title}
+                      {cleanUrl(link.url)}
                     </a>
                   </React.Fragment>
                 ))}
@@ -316,14 +351,14 @@ const ProfessionalResume1 = () => {
 
             {hasObjective() && (
               <section className="mt-4">
-                <h2 className="text-xl font-semibold text-gray-800">SUMMARY</h2>
-                <p className="text-gray-600 mt-2">{objective}</p>
+                <h2 className="text-lg md:text-xl font-semibold text-gray-800">SUMMARY</h2>
+                <p className="text-sm md:text-base text-gray-600 mt-2">{objective}</p>
               </section>
             )}
 
             {hasWorkExperience() && (
               <section className="mt-4">
-                <h2 className="text-xl font-semibold text-gray-800">PROFESSIONAL EXPERIENCE</h2>
+                <h2 className="text-lg md:text-xl font-semibold text-gray-800">PROFESSIONAL EXPERIENCE</h2>
                 {workExperience.filter(exp => {
                   const hasContent = (
                     (exp.company && exp.company.trim() !== '') ||
@@ -336,7 +371,7 @@ const ProfessionalResume1 = () => {
                   return hasContent;
                 }).map((experience, index) => (
                   <div key={index} className="mt-1">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-sm md:text-base">
                       <h3 className="font-bold text-gray-700">
                         {experience.company && experience.company.trim() && experience.company}
                         {experience.city && experience.city.trim() && `, ${experience.city}`}
@@ -351,7 +386,7 @@ const ProfessionalResume1 = () => {
                       <p className="text-gray-600 italic">{experience.jobTitle}</p>
                     )}
                     {!isEmptyDescription(experience.description) && (
-                      <ul className="list-disc list-inside text-gray-600">
+                      <ul className="list-disc list-inside text-gray-600 text-sm md:text-base">
                         {parseDescription(experience.description).map((desc, i) => (
                           <li key={i}>{desc}</li>
                         ))}
@@ -364,7 +399,7 @@ const ProfessionalResume1 = () => {
 
             {hasProjects() && (
               <section className="mt-2">
-                <h2 className="text-xl font-semibold text-gray-800">PROJECTS</h2>
+                <h2 className="text-lg md:text-xl font-semibold text-gray-800">PROJECTS</h2>
                 {projects.filter(project => {
                   const hasContent = (
                     (project.name && project.name.trim() !== '') ||
@@ -390,7 +425,7 @@ const ProfessionalResume1 = () => {
                       )}
                     </div>
                     {parseHTML(project.description).length > 0 && (
-                      <ul className="list-disc list-inside text-gray-600">
+                      <ul className="list-disc list-inside text-gray-600 text-sm md:text-base">
                         {parseHTML(project.description).map((desc, i) => (
                           <li key={i}>{desc}</li>
                         ))}
@@ -403,7 +438,7 @@ const ProfessionalResume1 = () => {
 
             {hasEducation() && (
               <section className="mt-2">
-                <h2 className="text-xl font-semibold text-gray-800">EDUCATION</h2>
+                <h2 className="text-lg md:text-xl font-semibold text-gray-800">EDUCATION</h2>
                 {education.filter(edu => {
                   const hasContent = (
                     (edu.degree && edu.degree.trim() !== '') ||
@@ -440,26 +475,29 @@ const ProfessionalResume1 = () => {
 
             {hasSkills() && (
               <section className="mt-2">
-                <h2 className="text-xl font-semibold text-gray-800">SKILLS</h2>
-                {Object.entries(skills)
-                  .filter(([_, items]) => Array.isArray(items) && items.some(item => item && item.trim() !== ''))
-                  .map(([category, items], index) => (
+                <h2 className="text-lg md:text-xl font-semibold text-gray-800">SKILLS</h2>
+                {sortSkillCategories(skills).map(([category, items], index) => {
+                  const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+                  const isDefaultCategory = defaultCategories.includes(category);
+
+                  return Array.isArray(items) && items.some(item => item && item.trim() !== '') && (
                     <div key={index} className="mt-1">
                       <h3 className="font-bold text-gray-700">
-                        {category.trim().toLocaleLowerCase() === "full stack" ? "Technical Skills" : category}
+                        {isDefaultCategory ? "Technical Skills" : category}
                       </h3>
-                      <p className="mt-0 text-gray-600">
+                      <p className="mt-0 text-gray-600 text-sm md:text-base">
                         {items.filter(item => item && item.trim() !== '').join(", ")}
                       </p>
                     </div>
-                  ))}
+                  );
+                })}
               </section>
             )}
 
             {hasAchievements() && (
               <section className="mt-2">
-                <h2 className="text-xl font-semibold text-gray-800">ACHIEVEMENTS & CERTIFICATIONS</h2>
-                <ul className="list-disc list-inside text-gray-600 mt-2">
+                <h2 className="text-lg md:text-xl font-semibold text-gray-800">ACHIEVEMENTS & CERTIFICATIONS</h2>
+                <ul className="list-disc list-inside text-gray-600 mt-2 text-sm md:text-base">
                   {parseAchievements(achievements).map((achievement, index) => (
                     <li key={index}>{achievement}</li>
                   ))}

@@ -55,62 +55,48 @@ const Skills = () => {
         return () => unsubscribe();
     }, [navigate]);
 
-    // Fetch existing skills
-   // Modify the useEffect that fetches existing skills
-useEffect(() => {
-    const fetchExistingSkills = async () => {
-        if (userId && resumeId) {
-            try {
-                const existingSkills = await fetchSkills(userId, resumeId);
+    // Modify the fetchExistingSkills function in useEffect
+    useEffect(() => {
+        const fetchExistingSkills = async () => {
+            if (userId && resumeId) {
+                try {
+                    const existingSkills = await fetchSkills(userId, resumeId);
+                    const mergedSkills = { ...DEFAULT_SKILLS };
+                    const dynamicCategories = [];
 
-                // Merge existing skills with defaults for display
-                const mergedSkills = { ...DEFAULT_SKILLS };
+                    Object.entries(existingSkills).forEach(([category, skills]) => {
+                        // Ensure skills is always an array
+                        const skillsArray = Array.isArray(skills) ? skills : [];
 
-                // Keep track of dynamically added categories
-                const dynamicCategories = [];
+                        if (!DEFAULT_SKILLS[category]) {
+                            dynamicCategories.push({
+                                name: category,
+                                skills: skillsArray
+                            });
+                        } else {
+                            mergedSkills[category] = skillsArray;
+                        }
+                    });
 
-                // Override defaults with user-saved skills
-                Object.keys(existingSkills).forEach(category => {
-                    // Only add non-default categories to dynamicCategories
-                    if (!DEFAULT_SKILLS[category]) {
-                        dynamicCategories.push(category);
-                        mergedSkills[category] = existingSkills[category];
-                    } else {
-                        // For default categories, merge skills
-                        mergedSkills[category] = existingSkills[category];
+                    setSkills(mergedSkills);
+                    setCategories(Object.keys(DEFAULT_SKILLS));
+                    setNewCategories(dynamicCategories);
+
+                    const savedCategory = localStorage.getItem(`selectedCategory-${resumeId}`);
+                    if (savedCategory && DEFAULT_SKILLS[savedCategory]) {
+                        setSelectedCategory(savedCategory);
                     }
-                });
-
-                setSkills(mergedSkills);
-
-                // Update categories to include only default categories in dropdown
-                setCategories(Object.keys(DEFAULT_SKILLS));
-
-                // Set new categories separately
-                setNewCategories(
-                    dynamicCategories.map(category => ({
-                        name: category,
-                        skills: existingSkills[category]
-                    }))
-                );
-
-                // Restore selected category from localStorage if it exists
-                const savedCategory = localStorage.getItem(`selectedCategory-${resumeId}`);
-                if (savedCategory && DEFAULT_SKILLS[savedCategory]) {
-                    setSelectedCategory(savedCategory);
+                } catch (error) {
+                    console.error("Error fetching skills:", error);
+                    toast.error("Failed to load skills");
+                } finally {
+                    setIsLoading(false);
                 }
-            } catch (error) {
-                console.error("Error fetching skills:", error);
-                toast.error("Failed to load skills");
             }
-            finally {
-                setIsLoading(false);
-              }
-        }
-    };
+        };
 
-    fetchExistingSkills();
-}, [userId, resumeId]);
+        fetchExistingSkills();
+    }, [userId, resumeId]);
 
     // Save selected category to localStorage
     useEffect(() => {
@@ -128,18 +114,30 @@ useEffect(() => {
     const handleAddCategory = () => {
         let newCategoryName = "Unnamed Category";
         let counter = 1;
-        
-        // Ensure unique category name
+
         while (
-            Object.keys(DEFAULT_SKILLS).includes(newCategoryName) || 
+            Object.keys(DEFAULT_SKILLS).includes(newCategoryName) ||
             newCategories.some(cat => cat.name === newCategoryName)
         ) {
             newCategoryName = `Unnamed Category ${counter}`;
             counter++;
         }
-    
-        const newCategory = { name: newCategoryName, skills: [] };
+
+        const newCategory = {
+            name: newCategoryName,
+            skills: [] // Explicitly initialize as empty array
+        };
         setNewCategories(prev => [...prev, newCategory]);
+    };
+
+    // Add a utility function to safely access skills
+    const getCategorySkills = (category, isDynamic = false) => {
+        if (isDynamic) {
+            const categoryObj = newCategories.find(cat => cat.name === category);
+            return Array.isArray(categoryObj?.skills) ? categoryObj.skills : [];
+        }
+        return Array.isArray(skills[category]) ? skills[category] :
+            Array.isArray(DEFAULT_SKILLS[category]) ? DEFAULT_SKILLS[category] : [];
     };
 
     const handleAddSkill = async (categoryName, event, isDynamic = false) => {
@@ -261,8 +259,8 @@ useEffect(() => {
         setNewCategories((prev) => prev.filter((_, i) => i !== index));
     };
 
-      // Loading state component
-      if (isLoading) {
+    // Loading state component
+    if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center ml-0 md:ml-64">
                 <div className="animate-pulse flex flex-col items-center space-y-4">
@@ -276,177 +274,177 @@ useEffect(() => {
 
     return (
         <div className="mt-16 min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 ml-0 md:ml-64">
-        <div className="my-8 w-full max-w-4xl bg-white/30 border border-white/20 rounded-xl shadow-2xl p-8 transform transition-all duration-300 hover:shadow-3xl hover:scale-[1.01]">
-            <form 
-                className="grid grid-cols-1 gap-y-6 w-full"
-                onSubmit={handleSubmit} 
-                noValidate
-            >
-                {/* Heading with navigation arrows */}
-                <div className="mb-1 flex justify-between items-center">
-                    <h2 className="text-3xl md:text-4xl font-bold text-gray-800 bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
-                        Skills
-                    </h2>
-                    <div className="flex space-x-2">
-                        <button
-                            type="button"
-                            onClick={() => handleNavigation("previous")}
-                            className="p-2 rounded-md bg-white/40 hover:bg-purple-200 focus:outline-none transition-all duration-300 transform hover:scale-105 group"
-                            aria-label="Previous"
-                        >
-                            <ChevronLeftIcon className="h-6 w-6 text-gray-700 group-hover:text-purple-600 transition-colors" />
-                        </button>
-                        <button
-                            type="button"
-                            // onClick={() => handleNavigation("next")}
-                            className="p-2 rounded-md bg-white/40 hover:bg-purple-200 focus:outline-none transition-all duration-300 transform hover:scale-105 group"
-                            aria-label="Next"
-                        >
-                            <ChevronRightIcon className="h-6 w-6 text-gray-700 group-hover:text-purple-600 transition-colors" />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Category Selection */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        Select Skill Category
-                    </label>
-                    <select
-                        className="mt-1 p-3 border border-gray-300 rounded-lg w-full bg-white/70 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 hover:bg-white/90"
-                        value={selectedCategory}
-                        onChange={(e) => {
-                            const category = e.target.value;
-                            setSelectedCategory(category);
-                            setSubheading(
-                                Object.keys(DEFAULT_SKILLS).includes(category)
-                                    ? "Technical Skills"
-                                    : `${category} Skills`
-                            );
-                        }}
-                    >
-                        <option value="">Select a category</option>
-                        {categories.map((category) => (
-                            <option key={category} value={category}>
-                                {category}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Selected Category Skills */}
-                {selectedCategory && (
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {subheading}
-                        </label>
-                        <div className="border border-gray-300 rounded-lg p-4 bg-white/70 flex flex-wrap gap-2">
-                            {(skills[selectedCategory] || DEFAULT_SKILLS[selectedCategory]).map((skill, index) => (
-                                <div
-                                    key={index}
-                                    className="flex items-center bg-purple-100 text-purple-800 px-3 py-1 rounded-full"
-                                >
-                                    <span className="mr-2">{skill}</span>
-                                    <XCircleIcon
-                                        className="h-5 w-5 text-purple-500 cursor-pointer hover:text-purple-700"
-                                        onClick={() => handleDeleteSkill(selectedCategory, skill)}
-                                    />
-                                </div>
-                            ))}
-                            <div
-                                contentEditable
-                                onKeyDown={(e) => handleAddSkill(selectedCategory, e)}
-                                className="bg-white text-gray-700 px-3 py-1 rounded-full outline-none cursor-text min-w-[100px] focus:ring-2 focus:ring-purple-500"
-                                placeholder="Type and press Enter"
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {/* Dynamic Categories */}
-                {newCategories.map((category, index) => (
-                    <div key={index}>
-                        <div className="flex justify-between items-center mb-2">
-                            <input
-                                type="text"
-                                defaultValue={category.name}
-                                className="text-sm font-medium text-gray-700 border-b border-gray-300 focus:border-purple-500 focus:outline-none flex-grow p-1"
-                                onBlur={(e) => {
-                                    const newName = e.target.value.trim();
-                                    setNewCategories(prev => 
-                                        prev.map((cat, i) => 
-                                            i === index ? { ...cat, name: newName || `Unnamed Category ${index + 1}` } : cat
-                                        )
-                                    );
-                                }}
-                            />
+            <div className="my-8 w-full max-w-4xl bg-white/30 border border-white/20 rounded-xl shadow-2xl p-8 transform transition-all duration-300 hover:shadow-3xl hover:scale-[1.01]">
+                <form
+                    className="grid grid-cols-1 gap-y-6 w-full"
+                    onSubmit={handleSubmit}
+                    noValidate
+                >
+                    {/* Heading with navigation arrows */}
+                    <div className="mb-1 flex justify-between items-center">
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-800 bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+                            Skills
+                        </h2>
+                        <div className="flex space-x-2">
                             <button
                                 type="button"
-                                onClick={() => handleDeleteCategory(index)}
-                                className="text-gray-500 hover:text-red-500 focus:outline-none transition-all duration-300 transform hover:scale-110 hover:rotate-6"
+                                onClick={() => handleNavigation("previous")}
+                                className="p-2 rounded-md bg-white/40 hover:bg-purple-200 focus:outline-none transition-all duration-300 transform hover:scale-105 group"
+                                aria-label="Previous"
                             >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-5 w-5"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    strokeWidth={2}
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0a2 2 0 00-2 2v0m6 0a2 2 0 012 2v0m-8 0h10m-6 4v6m-4-6v6m8-6v6"
-                                    />
-                                </svg>
+                                <ChevronLeftIcon className="h-6 w-6 text-gray-700 group-hover:text-purple-600 transition-colors" />
+                            </button>
+                            <button
+                                type="button"
+                                // onClick={() => handleNavigation("next")}
+                                className="p-2 rounded-md bg-white/40 hover:bg-purple-200 focus:outline-none transition-all duration-300 transform hover:scale-105 group"
+                                aria-label="Next"
+                            >
+                                <ChevronRightIcon className="h-6 w-6 text-gray-700 group-hover:text-purple-600 transition-colors" />
                             </button>
                         </div>
-                        <div className="border border-gray-300 rounded-lg p-4 bg-white/70 flex flex-wrap gap-2">
-                            {category.skills.map((skill, skillIndex) => (
-                                <div
-                                    key={skillIndex}
-                                    className="flex items-center bg-purple-100 text-purple-800 px-3 py-1 rounded-full"
-                                >
-                                    <span className="mr-2">{skill}</span>
-                                    <XCircleIcon
-                                        className="h-5 w-5 text-purple-500 cursor-pointer hover:text-purple-700"
-                                        onClick={() => handleDeleteSkill(category.name, skill, true)}
-                                    />
-                                </div>
-                            ))}
-                            <div
-                                contentEditable
-                                onKeyDown={(e) => handleAddSkill(category.name, e, true)}
-                                className="bg-white text-gray-700 px-3 py-1 rounded-full outline-none cursor-text min-w-[100px] focus:ring-2 focus:ring-purple-500"
-                                placeholder="Type and press Enter"
-                            />
-                        </div>
                     </div>
-                ))}
 
-                {/* Add Category and Save Buttons */}
-                <div className="flex flex-col sm:flex-row justify-between items-center mt-4 space-y-4 sm:space-y-0">
-                    <button
-                        type="button"
-                        onClick={handleAddCategory}
-                        className="flex items-center space-x-2 text-purple-600 hover:text-purple-700 focus:outline-none transition-all duration-300 transform hover:scale-105 bg-purple-50 px-4 py-2 rounded-lg group"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                        </svg>
-                        <span>Add Skill Category</span>
-                    </button>
+                    {/* Category Selection */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Select Skill Category
+                        </label>
+                        <select
+                            className="mt-1 p-3 border border-gray-300 rounded-lg w-full bg-white/70 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 hover:bg-white/90"
+                            value={selectedCategory}
+                            onChange={(e) => {
+                                const category = e.target.value;
+                                setSelectedCategory(category);
+                                setSubheading(
+                                    Object.keys(DEFAULT_SKILLS).includes(category)
+                                        ? "Technical Skills"
+                                        : `${category} Skills`
+                                );
+                            }}
+                        >
+                            <option value="">Select a category</option>
+                            {categories.map((category) => (
+                                <option key={category} value={category}>
+                                    {category}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-                    <button
-                        type="submit"
-                        className="bg-gradient-to-r from-purple-500 to-blue-500 text-white py-3 px-10 rounded-lg hover:from-purple-600 hover:to-blue-600 focus:outline-none transition-all duration-300 transform hover:scale-105"
-                    >
-                        Submit
-                    </button>
-                </div>
-            </form>
+                    {/* Selected Category Skills */}
+                    {selectedCategory && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                {subheading}
+                            </label>
+                            <div className="border border-gray-300 rounded-lg p-4 bg-white/70 flex flex-wrap gap-2">
+                                {(skills[selectedCategory] || DEFAULT_SKILLS[selectedCategory]).map((skill, index) => (
+                                    <div
+                                        key={index}
+                                        className="flex items-center bg-purple-100 text-purple-800 px-3 py-1 rounded-full"
+                                    >
+                                        <span className="mr-2">{skill}</span>
+                                        <XCircleIcon
+                                            className="h-5 w-5 text-purple-500 cursor-pointer hover:text-purple-700"
+                                            onClick={() => handleDeleteSkill(selectedCategory, skill)}
+                                        />
+                                    </div>
+                                ))}
+                                <div
+                                    contentEditable
+                                    onKeyDown={(e) => handleAddSkill(selectedCategory, e)}
+                                    className="bg-white text-gray-700 px-3 py-1 rounded-full outline-none cursor-text min-w-[100px] focus:ring-2 focus:ring-purple-500"
+                                    placeholder="Type and press Enter"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Dynamic Categories */}
+                    {newCategories.map((category, index) => (
+                        <div key={index}>
+                            <div className="flex justify-between items-center mb-2">
+                                <input
+                                    type="text"
+                                    defaultValue={category.name}
+                                    className="text-sm font-medium text-gray-700 border-b border-gray-300 focus:border-purple-500 focus:outline-none flex-grow p-1"
+                                    onBlur={(e) => {
+                                        const newName = e.target.value.trim();
+                                        setNewCategories(prev =>
+                                            prev.map((cat, i) =>
+                                                i === index ? { ...cat, name: newName || `Unnamed Category ${index + 1}` } : cat
+                                            )
+                                        );
+                                    }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => handleDeleteCategory(index)}
+                                    className="text-gray-500 hover:text-red-500 focus:outline-none transition-all duration-300 transform hover:scale-110 hover:rotate-6"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-5 w-5"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth={2}
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0a2 2 0 00-2 2v0m6 0a2 2 0 012 2v0m-8 0h10m-6 4v6m-4-6v6m8-6v6"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div className="border border-gray-300 rounded-lg p-4 bg-white/70 flex flex-wrap gap-2">
+                                {getCategorySkills(category.name, true).map((skill, skillIndex) => (
+                                    <div
+                                        key={skillIndex}
+                                        className="flex items-center bg-purple-100 text-purple-800 px-3 py-1 rounded-full"
+                                    >
+                                        <span className="mr-2">{skill}</span>
+                                        <XCircleIcon
+                                            className="h-5 w-5 text-purple-500 cursor-pointer hover:text-purple-700"
+                                            onClick={() => handleDeleteSkill(category.name, skill, true)}
+                                        />
+                                    </div>
+                                ))}
+                                <div
+                                    contentEditable
+                                    onKeyDown={(e) => handleAddSkill(category.name, e, true)}
+                                    className="bg-white text-gray-700 px-3 py-1 rounded-full outline-none cursor-text min-w-[100px] focus:ring-2 focus:ring-purple-500"
+                                    placeholder="Type and press Enter"
+                                />
+                            </div>
+                        </div>
+                    ))}
+
+                    {/* Add Category and Save Buttons */}
+                    <div className="flex flex-col sm:flex-row justify-between items-center mt-4 space-y-4 sm:space-y-0">
+                        <button
+                            type="button"
+                            onClick={handleAddCategory}
+                            className="flex items-center space-x-2 text-purple-600 hover:text-purple-700 focus:outline-none transition-all duration-300 transform hover:scale-105 bg-purple-50 px-4 py-2 rounded-lg group"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                            <span>Add Skill Category</span>
+                        </button>
+
+                        <button
+                            type="submit"
+                            className="bg-gradient-to-r from-purple-500 to-blue-500 text-white py-3 px-10 rounded-lg hover:from-purple-600 hover:to-blue-600 focus:outline-none transition-all duration-300 transform hover:scale-105"
+                        >
+                            Submit
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
     );
 };
 

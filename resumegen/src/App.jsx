@@ -15,6 +15,7 @@ import ResumeRole from './pages/ResumeRole';
 import JobDescription from './pages/JobDescription';
 import Results from './pages/Results';
 import Home from './pages/Home';
+import JobRolePage from './pages/JobRolePage';
 
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
         <Route path="/jd-score" element={<JobDescription />} />
         <Route path="/results" element={<Results/>} />
         <Route path="/home" element={<Home/>} />
+        <Route path="/jobrole" element={<JobRolePage />} />
       </Routes>
     </>
   );

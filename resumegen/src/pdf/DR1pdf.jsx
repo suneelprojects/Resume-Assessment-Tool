@@ -25,6 +25,11 @@ const styles = StyleSheet.create({
         color: '#4b5563', // gray-600
         fontFamily: 'Helvetica'
     },
+    workjobTitle: {
+        fontSize: 12,
+        color: '#4b5563', // gray-600
+        fontStyle: 'italic'
+    },
     sectionTitle: {
         fontSize: 16,
         fontWeight: 'bold',
@@ -86,7 +91,7 @@ const styles = StyleSheet.create({
         fontFamily: 'Helvetica'
     },
     listItem: {
-        fontSize: 12,
+        fontSize: 11,
         marginLeft: 10,
         marginBottom: 3,
         color: '#4b5563',
@@ -99,7 +104,12 @@ const styles = StyleSheet.create({
     },
     educationDetails: {
         fontSize: 11,
+        color: '#111827',
+        fontFamily: 'Helvetica'
+    },
+    educationDate: {
         color: '#4b5563',
+        fontSize: 11,
         fontFamily: 'Helvetica'
     }
 });
@@ -228,6 +238,26 @@ export const DR1PDFDownload = ({ resumeData, template }) => {
         }
     };
 
+    // Helper function to sort skills categories
+    const sortSkillCategories = (skills) => {
+        if (!skills) return [];
+
+        const skillsArray = Object.entries(skills);
+        const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+
+        // Separate technical skills (default categories) and custom categories
+        const technicalSkills = skillsArray.filter(([category]) =>
+            defaultCategories.includes(category)
+        );
+
+        const customSkills = skillsArray.filter(([category]) =>
+            !defaultCategories.includes(category)
+        );
+
+        // Return with technical skills first, followed by custom categories
+        return [...technicalSkills, ...customSkills];
+    };
+
     const generatePDF = async () => {
         const doc = (
             <Document>
@@ -249,17 +279,22 @@ export const DR1PDFDownload = ({ resumeData, template }) => {
                     <View style={styles.contactInfo}>
                         <View>
                             <Text style={styles.contactItem}>
-                                {personalDetails.phone || "N/A"}
+                                {personalDetails.phone}
                             </Text>
                             <Text style={styles.contactItem}>
-                                {personalDetails.email || "N/A"}
+                                {personalDetails.email}
                             </Text>
                             <Text style={styles.contactItem}>
-                                {personalDetails.address || "N/A"}
+                                {personalDetails.address}
                             </Text>
                             {personalDetails.linkedin && (
                                 <Text style={styles.contactItem}>
                                     LinkedIn
+                                </Text>
+                            )}
+                            {personalDetails.github && (
+                                <Text style={styles.contactItem}>
+                                    GitHub
                                 </Text>
                             )}
                             {personalDetails.otherLinks?.map((link, index) => (
@@ -286,13 +321,14 @@ export const DR1PDFDownload = ({ resumeData, template }) => {
                             <View style={styles.sectionTitle}>
                                 <Text>Skills</Text>
                             </View>
-                            {Object.entries(skills).map(([category, skillList], index) => (
-                                skillList && skillList.length > 0 && (
+                            {sortSkillCategories(skills).map(([category, skillList], index) => {
+                                const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+                                const isDefaultCategory = defaultCategories.includes(category);
+
+                                return skillList && skillList.length > 0 && (
                                     <View key={index}>
                                         <Text style={styles.skillCategory}>
-                                            {category.trim().toLowerCase() === "full stack"
-                                                ? "Technical Skills"
-                                                : category}
+                                            {isDefaultCategory ? "Technical Skills" : category}
                                         </Text>
                                         <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                                             {skillList.map((skill, idx) => (
@@ -304,8 +340,8 @@ export const DR1PDFDownload = ({ resumeData, template }) => {
                                             ))}
                                         </View>
                                     </View>
-                                )
-                            ))}
+                                );
+                            })}
                         </>
                     )}
 
@@ -323,9 +359,12 @@ export const DR1PDFDownload = ({ resumeData, template }) => {
                                                 {experience.company} - {experience.city}
                                             </Text>
                                             <Text style={styles.experienceDate}>
-                                                ({experience.startDate} - {experience.endDate || "Present"})
+                                                {experience.startDate}
+                                                {experience.startDate && experience.endDate && " - "}
+                                                {experience.endDate}
                                             </Text>
                                         </View>
+                                        <Text style={styles.workjobTitle}>{experience.jobTitle}</Text>
                                         {parseDescription(experience.description).map((desc, i) => (
                                             <Text key={i} style={styles.listItem}>
                                                 • {desc}
@@ -379,12 +418,14 @@ export const DR1PDFDownload = ({ resumeData, template }) => {
                                         <Text style={[styles.educationDetails, { fontFamily: 'Helvetica-Bold' }]}>
                                             {edu.degree} in {edu.major}
                                         </Text>
-                                        <Text style={styles.educationDetails}>
+                                        <Text style={styles.educationDate}>
                                             {edu.university}, {edu.city}
                                         </Text>
                                     </View>
                                     <Text style={styles.educationDetails}>
-                                        {edu.startDate} - {edu.endDate}
+                                        {edu.startDate}
+                                        {edu.startDate && edu.endDate && " - "}
+                                        {edu.endDate}
                                     </Text>
                                 </View>
                             ))}

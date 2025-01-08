@@ -281,6 +281,8 @@ const PersonalDetails = () => {
               onChange={handleChange}
               placeholder="Enter your phone number"
               required
+              maxLength={10}
+              pattern="\d{10}"
               className="mt-1 p-3 border border-gray-300 rounded-lg w-full bg-white/70 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 hover:bg-white/90"
             />
           </div>
@@ -303,7 +305,7 @@ const PersonalDetails = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700">LinkedIn</label>
             <input
-              type="url"
+              type="text"
               name="linkedin"
               value={formData.linkedin}
               onChange={handleChange}
@@ -315,7 +317,7 @@ const PersonalDetails = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700">GitHub</label>
             <input
-              type="url"
+              type="text"
               name="github"
               value={formData.github}
               onChange={handleChange}
@@ -344,7 +346,7 @@ const PersonalDetails = () => {
                   Link URL {index + 1}
                 </label>
                 <input
-                  type="url"
+                  type="text"
                   value={link.url}
                   onChange={(e) => handleOtherLinkChange(index, "url", e.target.value)}
                   placeholder="Enter URL"

@@ -6,7 +6,7 @@ import {
   faMapMarkerAlt,
   faLink,
 } from "@fortawesome/free-solid-svg-icons";
-import { faLinkedin } from "@fortawesome/free-brands-svg-icons";
+import { faLinkedin, faGithub } from "@fortawesome/free-brands-svg-icons";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../services/firebaseConfig";
 import { auth } from "../services/firebaseConfig";
@@ -65,9 +65,9 @@ const DigitalResume1 = () => {
 
       // Save the complete resume
       await saveCompleteResume(
-        user.uid, 
-        resumeId, 
-        completeResumeData, 
+        user.uid,
+        resumeId,
+        completeResumeData,
         template || 'DigitalResume1'
       );
 
@@ -91,7 +91,7 @@ const DigitalResume1 = () => {
     const fetchResumeData = async () => {
       try {
         const user = auth.currentUser;
-        
+
         if (!user || !resumeId) {
           console.error("userId or resumeId is missing");
           setLoading(false);
@@ -125,44 +125,71 @@ const DigitalResume1 = () => {
 
   // Parsing helper functions
   const parseHTML = (htmlString) => {
-    if (!htmlString || htmlString.trim() === '' || htmlString === '<br>') {
+    if (!htmlString || typeof htmlString !== 'string') {
       return [];
     }
+    
+    const trimmedString = htmlString.trim();
+    if (trimmedString === '' || trimmedString === '<br>') {
+      return [];
+    }
+
     try {
       const parser = new DOMParser();
       const doc = parser.parseFromString(htmlString, "text/html");
       const items = Array.from(doc.querySelectorAll("li")).map((li) => li.textContent);
-      return items.filter(item => item && item.trim() !== '');
+      return items.filter(item => item && typeof item === 'string' && item.trim() !== '');
     } catch {
-      return htmlString.trim() !== '' ? [htmlString] : [];
+      return trimmedString !== '' ? [trimmedString] : [];
     }
   };
 
-  const parseAchievements = (htmlString) => {
-    if (!htmlString || htmlString.trim() === '' || htmlString === '<br>') {
-      return [];
+  const parseAchievements = (achievements) => {
+    // Handle array of achievements
+    if (Array.isArray(achievements)) {
+      return achievements.filter(achievement => 
+        achievement && typeof achievement === 'string' && achievement.trim() !== ''
+      );
     }
-    try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlString, "text/html");
-      const items = Array.from(doc.querySelectorAll("li")).map((li) => li.textContent);
-      return items.filter(item => item && item.trim() !== '');
-    } catch {
-      return htmlString.trim() !== '' ? [htmlString] : [];
+    
+    // Handle string (HTML) input
+    if (typeof achievements === 'string') {
+      const trimmedString = achievements.trim();
+      if (trimmedString === '' || trimmedString === '<br>') {
+        return [];
+      }
+
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(achievements, "text/html");
+        const items = Array.from(doc.querySelectorAll("li")).map((li) => li.textContent);
+        return items.filter(item => item && typeof item === 'string' && item.trim() !== '');
+      } catch {
+        return trimmedString !== '' ? [trimmedString] : [];
+      }
     }
+
+    // Handle any other type of input
+    return [];
   };
 
-  const parseDescription = (htmlString) => {
-    if (!htmlString || htmlString.trim() === '' || htmlString === '<br>') {
+  const parseDescription = (description) => {
+    if (!description || typeof description !== 'string') {
       return [];
     }
+    
+    const trimmedString = description.trim();
+    if (trimmedString === '' || trimmedString === '<br>') {
+      return [];
+    }
+
     try {
       const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlString, "text/html");
+      const doc = parser.parseFromString(description, "text/html");
       const items = Array.from(doc.querySelectorAll("li")).map((li) => li.textContent);
-      return items.filter(item => item && item.trim() !== '');
+      return items.filter(item => item && typeof item === 'string' && item.trim() !== '');
     } catch {
-      return htmlString.trim() !== '' ? [htmlString] : [];
+      return trimmedString !== '' ? [trimmedString] : [];
     }
   };
 
@@ -172,12 +199,12 @@ const DigitalResume1 = () => {
     return !parsed || parsed.length === 0 || parsed.every(item => !item || item.trim() === '');
   };
 
-    // Loading spinner component (same as in ResumeEditor)
-    const LoadingSpinner = () => (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-purple-500"></div>
-      </div>
-    );
+  // Loading spinner component (same as in ResumeEditor)
+  const LoadingSpinner = () => (
+    <div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-purple-500"></div>
+    </div>
+  );
 
   // Loading state
   if (loading) {
@@ -264,14 +291,74 @@ const DigitalResume1 = () => {
   };
 
   const hasAchievements = () => {
-    if (!achievements) return false;
-    const parsedAchievements = parseAchievements(achievements);
+    if (!resumeData?.achievements) return false;
+    const parsedAchievements = parseAchievements(resumeData.achievements);
     return parsedAchievements.length > 0;
+  }; 
+
+  // Add helper function to check if contact section should be displayed
+  const hasContactInfo = (personalDetails) => {
+    const {
+      phone,
+      email,
+      address,
+      linkedin,
+      github,
+      otherLinks
+    } = personalDetails || {};
+
+    return (
+      (phone && phone.trim() !== '') ||
+      (email && email.trim() !== '') ||
+      (address && address.trim() !== '') ||
+      (linkedin && linkedin.trim() !== '') ||
+      (github && github.trim() !== '') ||
+      (otherLinks && otherLinks.length > 0 && otherLinks.some(link => link.url && link.url.trim() !== ''))
+    );
+  };
+
+  // Add helper function to render contact item
+  const ContactItem = ({ icon, value, href, label }) => {
+    if (!value || value.trim() === '') return null;
+
+    const content = href ? (
+      <a href={href} target="_blank" rel="noopener noreferrer">
+        {label || value}
+      </a>
+    ) : value;
+
+    return (
+      <li>
+        <FontAwesomeIcon icon={icon} className="text-teal-500 mr-2" />
+        {content}
+      </li>
+    );
+  };
+
+  // Helper function to sort skills categories 
+  const sortSkillCategories = (skills) => {
+    if (!skills) return [];
+
+    const skillsArray = Object.entries(skills);
+    const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+
+    // Separate technical skills (default categories) and custom categories
+    const technicalSkills = skillsArray.filter(([category]) =>
+      defaultCategories.includes(category)
+    );
+
+    const customSkills = skillsArray.filter(([category]) =>
+      !defaultCategories.includes(category)
+    );
+
+    // Return with technical skills first, followed by custom categories
+    return [...technicalSkills, ...customSkills];
   };
 
   return (
     <div className="w-full min-h-screen bg-gray-100 flex justify-center p-4">
       <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6">
+        {/* Header */}
         <div className="border-b-[5px] border-teal-600 pb-2 mb-4">
           <h1 className="text-3xl font-bold text-teal-600">
             {personalDetails.firstName} {personalDetails.lastName}
@@ -282,65 +369,52 @@ const DigitalResume1 = () => {
         </div>
 
         {/* Contact */}
-        <div className="border-b-[5px] border-teal-600 pb-4 mb-4">
-          <div className="grid grid-cols-3 gap-6 mb-1">
-            <div>
-              <h2 className="text-lg font-semibold text-teal-600">CONTACT</h2>
-              <ul className="text-gray-600 space-y-2">
-                <li>
-                  <FontAwesomeIcon
+        {hasContactInfo(personalDetails) && (
+          <div className="border-b-[5px] border-teal-600 pb-4 mb-4">
+            <div className="grid grid-cols-3 gap-6 mb-1">
+              <div>
+                <h2 className="text-lg font-semibold text-teal-600">CONTACT</h2>
+                <ul className="text-gray-600 space-y-2">
+                  <ContactItem
                     icon={faPhone}
-                    className="text-teal-500 mr-2"
+                    value={personalDetails.phone}
                   />
-                  {personalDetails.phone || "N/A"}
-                </li>
-                <li>
-                  <FontAwesomeIcon
+                  <ContactItem
                     icon={faEnvelope}
-                    className="text-teal-500 mr-2"
+                    value={personalDetails.email}
                   />
-                  {personalDetails.email || "N/A"}
-                </li>
-                <li>
-                  <FontAwesomeIcon
+                  <ContactItem
                     icon={faMapMarkerAlt}
-                    className="text-teal-500 mr-2"
+                    value={personalDetails.address}
                   />
-                  {personalDetails.address || "N/A"}
-                </li>
-                <li>
-                  <FontAwesomeIcon
+                  <ContactItem
                     icon={faLinkedin}
-                    className=" text-teal-500 mr-2"
-                  />
-                  <a
+                    value={personalDetails.linkedin}
                     href={personalDetails.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    LinkedIn
-                  </a>
-                </li>
-                {/* Additional Links */}
-                {personalDetails.otherLinks && personalDetails.otherLinks.map((link, index) => (
-                    <li key={index}>
-                      <FontAwesomeIcon
+                    label="LinkedIn"
+                  />
+                  <ContactItem
+                    icon={faGithub}
+                    value={personalDetails.github}
+                    href={personalDetails.github}
+                    label="GitHub"
+                  />
+                  {personalDetails.otherLinks?.map((link, index) => (
+                    link.url && link.title && (
+                      <ContactItem
+                        key={index}
                         icon={faLink}
-                        className="text-teal-500 mr-2"
-                      />
-                      <a
+                        value={link.url}
                         href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {link.title}
-                      </a>
-                    </li>
+                        label={link.title}
+                      />
+                    )
                   ))}
-              </ul>
+                </ul>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Summary/Objective Section */}
         {hasObjective() && (
@@ -351,17 +425,21 @@ const DigitalResume1 = () => {
             </div>
           </div>
         )}
-        
+
         {/* Skills Section */}
         {hasSkills() && (
           <div className="border-b-[5px] border-teal-600 pb-4 mb-4">
             <div className="mb-2 mt-[-15px]">
               <h2 className="text-xl font-semibold text-teal-600 mt-6">Skills</h2>
-              {Object.entries(skills).map(([category, skillList], index) => (
-                skillList && skillList.length > 0 && (
+              {/* Display Technical Skills first */}
+              {sortSkillCategories(skills).map(([category, skillList], index) => {
+                const defaultCategories = ["Full Stack", "Cloud Computing", "Artificial Intelligence", "Data Science"];
+                const isDefaultCategory = defaultCategories.includes(category);
+
+                return skillList && skillList.length > 0 && (
                   <div key={index} className="mt-2">
                     <h3 className="font-bold mb-2">
-                      {category.trim().toLocaleLowerCase() === "full stack" ? "Technical Skills" : category}
+                      {isDefaultCategory ? "Technical Skills" : category}
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {skillList.map((skill, idx) => (
@@ -376,8 +454,8 @@ const DigitalResume1 = () => {
                       ))}
                     </div>
                   </div>
-                )
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -398,9 +476,12 @@ const DigitalResume1 = () => {
                           {experience.company} - {experience.city}
                         </h3>
                         <p className="text-right text-sm text-gray-900">
-                          ({experience.startDate} - {experience.endDate || "Present"})
+                        {experience.startDate}
+                  {experience.startDate && experience.endDate && " - "}
+                  {experience.endDate}
                         </p>
                       </div>
+                      <p className="text-gray-600 italic">{experience.jobTitle}</p>
                       <ul className="list-disc list-inside text-gray-600">
                         {parseDescription(experience.description).map((desc, i) => (
                           <li key={i}>{desc}</li>
@@ -461,8 +542,10 @@ const DigitalResume1 = () => {
                       {edu.university}, {edu.city}
                     </p>
                   </div>
-                  <div className="w-1/4 text-right text-gray-600 text-sm">
-                    {edu.startDate} - {edu.endDate}
+                  <div className="w-1/3 text-right text-gray-600 text-sm">
+                  {edu.startDate}
+                  {edu.startDate && edu.endDate && " - "}
+                  {edu.endDate}
                   </div>
                 </div>
               ))}
