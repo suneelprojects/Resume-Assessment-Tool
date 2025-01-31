@@ -10,7 +10,7 @@ const HomePage = () => {
       <main className="w-full max-w-6xl mx-auto px-4 py-12">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 leading-tight mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 leading-tight mb-4 mt-5">
             Build Your <span className="text-blue-600">Perfect Resume</span>
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -44,7 +44,7 @@ const HomePage = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-green-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="p-8 z-10 relative flex flex-col items-center text-center">
               <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                Check Your <span className="text-green-600">Score</span>
+                Check Your <span className="text-green-600">Resume Score</span>
               </h2>
               <p className="text-gray-600 mb-6 leading-relaxed">
                 Evaluate your resume and receive actionable feedback to stand out in the crowd.
