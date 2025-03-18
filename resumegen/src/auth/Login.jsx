@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../services/firebaseConfig';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -70,9 +70,22 @@ const Login = () => {
     }
   };
 
+  const handleGoBack = () => {
+    navigate("/"); // Navigate back to the main page
+  };
+
   return (
     <div className="bg-white min-h-screen w-full flex items-center justify-center overflow-y-auto py-8">
-      <div className="flex flex-col md:flex-row w-11/12 max-w-4xl bg-white rounded-lg shadow-lg overflow-hidden">
+      <div className="flex flex-col md:flex-row w-11/12 max-w-4xl bg-white rounded-lg shadow-lg overflow-hidden relative">
+        {/* Back Arrow Icon */}
+        <button
+          onClick={handleGoBack}
+          className="absolute top-4 left-4 text-gray-600 hover:text-gray-800 focus:outline-none"
+          aria-label="Go back"
+        >
+          <ArrowLeft size={24} />
+        </button>
+
         {/* Left Side: ATS Description */}
         <div className="md:w-5/12 p-8 bg-gray-50 flex flex-col justify-center rounded-t-lg md:rounded-l-lg md:rounded-tr-none">
           <h2 className="text-4xl font-semibold text-gray-800 mb-4">Welcome to the Application Tracking System</h2>
